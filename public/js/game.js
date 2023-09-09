@@ -458,8 +458,16 @@ function animate() {
     }
   }
 
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // ctx.fillStyle = "white";
+  // ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  var img = new Image();
+  img.src = "/media/images/canvas_bg.jpg"; // Replace with the actual image path
+
+  img.onload = function () {
+    // Draw the image onto the canvas
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
 
   if (playerPosition !== "blueOC") {
     redShip.draw();
