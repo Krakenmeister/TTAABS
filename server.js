@@ -169,6 +169,43 @@ io.on("connection", (socket) => {
       io.in(gameCode).emit("updateLobby", gameState.players);
     }
   });
+  socket.on("updateRed", (gameCode, targetAngularVelocity) => {
+    let gameState = games[`${gameCode}`];
+    if (!gameState) {
+      return;
+    }
+    gameState.redShip.targetAngularVelocity = targetAngularVelocity;
+  });
+  socket.on("updateBlue", (gameCode, targetAngularVelocity) => {
+    let gameState = games[`${gameCode}`];
+    if (!gameState) {
+      return;
+    }
+    gameState.blueShip.targetAngularVelocity = targetAngularVelocity;
+  });
+  socket.on("fire", (gameCode, team, direction, power, range) => {
+    let gameState = games[`${gameCode}`];
+    if (!gameState) {
+      return;
+    }
+
+    let missileAngle;
+    let ship;
+    if (team === 0) {
+      ship = gameState.redShip;
+    } else {
+      ship = gameState.blueShip;
+    }
+
+    let newMissile = {
+      team: team,
+      angle: missileAngle,
+      maxTimer: range,
+      timer: 0,
+      damage: power,
+    };
+    gameState.missiles.push(newMissile);
+  });
 });
 
 setInterval(() => {
@@ -196,7 +233,7 @@ setInterval(() => {
       gameState.redShip.y += worldHeight;
     }
 
-    gameState.redShip.angle += gameState.redShip.angularVelocity;
+    gameState.redShip.angle += gameState.redShip.angularVelocity / 100;
     if (
       Math.abs(
         gameState.redShip.targetAngularVelocity -
@@ -233,7 +270,7 @@ setInterval(() => {
       gameState.blueShip.y += worldHeight;
     }
 
-    gameState.blueShip.angle += gameState.blueShip.angularVelocity;
+    gameState.blueShip.angle += gameState.blueShip.angularVelocity / 100;
     if (
       Math.abs(
         gameState.blueShip.targetAngularVelocity -
@@ -253,8 +290,8 @@ setInterval(() => {
         );
     }
 
-    console.log("Red ship: " + JSON.stringify(gameState.redShip));
-    console.log("Blue ship: " + JSON.stringify(gameState.blueShip));
+    //console.log("Red ship: " + JSON.stringify(gameState.redShip));
+    //console.log("Blue ship: " + JSON.stringify(gameState.blueShip));
 
     io.to(gameCode).emit("updateGame", gameState);
   }
