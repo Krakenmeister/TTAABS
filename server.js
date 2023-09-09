@@ -126,6 +126,20 @@ router.post("/setCookies", (req, res) => {
   res.end();
 });
 
+router.post("/canReveal", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  let gameState = games[`${req.body.gameCode}`];
+  if (!gameState) {
+    res.end(JSON.stringify({ canReveal: false }));
+  } else {
+    if (req.body.team === 0) {
+      res.end(JSON.stringify({ canReveal: gameState.redShip.power > 20 }));
+    } else if (req.body.team === 1) {
+      res.end(JSON.stringify({ canReveal: gameState.blueShip.power > 20 }));
+    }
+  }
+});
+
 io.on("connection", (socket) => {
   socket.on("joinGame", (gameCode, position) => {
     let gameState = games[`${gameCode}`];
@@ -143,15 +157,18 @@ io.on("connection", (socket) => {
     }
 
     socket.join(gameCode);
+    /*if (allJoined && gameState.redShip) {
+      return;
+    }*/
     if (allJoined) {
       gameState.redShip = {
         x: Math.random() * worldWidth,
         y: Math.random() * worldHeight,
-        speed: 1,
+        speed: 0.33,
         angle: Math.random() * 2 * Math.PI,
         angularVelocity: 0,
         targetAngularVelocity: 0,
-        angularAcceleration: 0.01,
+        angularAcceleration: 0.005,
         health: 100,
         power: 100,
       };
@@ -159,11 +176,11 @@ io.on("connection", (socket) => {
       gameState.blueShip = {
         x: Math.random() * worldWidth,
         y: Math.random() * worldHeight,
-        speed: 1,
+        speed: 0.33,
         angle: Math.random() * 2 * Math.PI,
         angularVelocity: 0,
         targetAngularVelocity: 0,
-        angularAcceleration: 0.01,
+        angularAcceleration: 0.005,
         health: 100,
         power: 100,
       };
@@ -206,11 +223,6 @@ io.on("connection", (socket) => {
       gameState.blueShip.power -= actualDamage;
     }
 
-    console.log(damage);
-    console.log(actualDamage);
-    console.log(gameState.redShip.power);
-    console.log(gameState.blueShip.power);
-
     let newMissile = {
       x: x,
       y: y,
@@ -223,6 +235,9 @@ io.on("connection", (socket) => {
     };
     gameState.missiles.push(newMissile);
   });
+  socket.on("message", (gameCode, author, receiver, message) => {
+    io.to(gameCode).emit("message", author, receiver, message);
+  });
 });
 
 setInterval(() => {
@@ -233,8 +248,8 @@ setInterval(() => {
       return;
     }
 
-    gameState.redShip.power = Math.min(100, gameState.redShip.power + 0.1);
-    gameState.blueShip.power = Math.min(100, gameState.blueShip.power + 0.1);
+    gameState.redShip.power = Math.min(100, gameState.redShip.power + 0.02);
+    gameState.blueShip.power = Math.min(100, gameState.blueShip.power + 0.02);
 
     // Update missiles
     for (let i = 0; i < gameState.missiles.length; i++) {

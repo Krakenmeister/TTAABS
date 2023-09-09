@@ -178,6 +178,13 @@ socket.on("startGame", (gameState) => {
     let controlBox = document.createElement("div");
     controlBox.id = "controlBox";
 
+    let damageWrapper = document.createElement("div");
+    damageWrapper.id = "damageWrapper";
+
+    let damageLabel = document.createElement("div");
+    damageLabel.textContent = "Missile damage:";
+    damageLabel.id = "damageLabel";
+
     let damageInput = document.createElement("input");
     damageInput.type = "range";
     damageInput.id = "damageInput";
@@ -185,6 +192,9 @@ socket.on("startGame", (gameState) => {
     damageInput.min = "0";
     damageInput.max = "100";
     damageInput.step = "1";
+
+    damageWrapper.appendChild(damageLabel);
+    damageWrapper.appendChild(damageInput);
 
     let powerWrapper = document.createElement("div");
     powerWrapper.id = "powerWrapper";
@@ -195,8 +205,18 @@ socket.on("startGame", (gameState) => {
 
     powerWrapper.appendChild(powerDisplay);
 
-    controlBox.appendChild(damageInput);
+    let healthWrapper = document.createElement("div");
+    healthWrapper.id = "healthWrapper";
+
+    let healthDisplay = document.createElement("div");
+    healthDisplay.id = "healthDisplay";
+    healthDisplay.style.width = `${gameState.redShip.health}%`;
+
+    healthWrapper.appendChild(healthDisplay);
+
+    controlBox.appendChild(damageWrapper);
     controlBox.appendChild(powerWrapper);
+    controlBox.appendChild(healthWrapper);
 
     uiWrapper.appendChild(messageBox);
     uiWrapper.appendChild(controlBox);
@@ -305,6 +325,46 @@ socket.on("startGame", (gameState) => {
     let controlBox = document.createElement("div");
     controlBox.id = "controlBox";
 
+    let damageWrapper = document.createElement("div");
+    damageWrapper.id = "damageWrapper";
+
+    let damageLabel = document.createElement("div");
+    damageLabel.textContent = "Missile damage:";
+    damageLabel.id = "damageLabel";
+
+    let damageInput = document.createElement("input");
+    damageInput.type = "range";
+    damageInput.id = "damageInput";
+    damageInput.name = "damageInput";
+    damageInput.min = "0";
+    damageInput.max = "100";
+    damageInput.step = "1";
+
+    damageWrapper.appendChild(damageLabel);
+    damageWrapper.appendChild(damageInput);
+
+    let powerWrapper = document.createElement("div");
+    powerWrapper.id = "powerWrapper";
+
+    let powerDisplay = document.createElement("div");
+    powerDisplay.id = "powerDisplay";
+    powerDisplay.style.width = `${gameState.blueShip.power}%`;
+
+    powerWrapper.appendChild(powerDisplay);
+
+    let healthWrapper = document.createElement("div");
+    healthWrapper.id = "healthWrapper";
+
+    let healthDisplay = document.createElement("div");
+    healthDisplay.id = "healthDisplay";
+    healthDisplay.style.width = `${gameState.redShip.health}%`;
+
+    healthWrapper.appendChild(healthDisplay);
+
+    controlBox.appendChild(damageWrapper);
+    controlBox.appendChild(powerWrapper);
+    controlBox.appendChild(healthWrapper);
+
     uiWrapper.appendChild(messageBox);
     uiWrapper.appendChild(controlBox);
 
@@ -406,10 +466,74 @@ socket.on("startGame", (gameState) => {
       mouseOnCanvas = -1;
     });
   } else if (playerPosition === "redIC" || playerPosition === "blueIC") {
+    uiWrapper.innerHTML = `
+        <div id="chatWrapper">
+            <div id="messageWrapper"></div>
+            <div id="messageInputWrapper">
+                <input type="text" id="messageInput" name="messageInput">
+                <div id="messageInputBtnAlly">Ally</div>
+                <div id="messageInputBtnEnemy">Enemy</div>
+            </div>
+        </div>
+    `;
   }
 
   document.getElementById("gameWrapper").appendChild(canvas);
   document.getElementById("gameWrapper").appendChild(uiWrapper);
+
+  if (playerPosition === "redIC" || playerPosition == "blueIC") {
+    document.getElementById("messageInputBtnAlly").addEventListener("click", () => {
+      socket.emit("message", gameCode, getTeam(), getTeam(), document.getElementById("messageInput").value);
+      document.getElementById("messageInput").value = "";
+    });
+    document.getElementById("messageInputBtnEnemy").addEventListener("click", () => {
+      socket.emit("message", gameCode, getTeam(), (getTeam() + 1) % 2, document.getElementById("messageInput").value);
+      document.getElementById("messageInput").value = "";
+    });
+  }
+});
+
+socket.on("message", (author, receiver, message) => {
+  console.log(author);
+  console.log(receiver);
+  console.log(message);
+  if ((playerPosition === "redOC" && receiver === 0) || (playerPosition === "blueOC" && receiver === 1)) {
+    let messageElement = document.createElement("div");
+    messageElement.className = "messageElement";
+
+    let messageRevealButton = document.createElement("div");
+    messageRevealButton.className = "messageRevealButton";
+    messageRevealButton.textContent = "Unknown:";
+    if (author === receiver) {
+      messageRevealButton.addEventListener("click", () => {
+        axios.post("/canReveal", { gameCode: gameCode, team: getTeam() }).then((res) => {
+          if (res.data.canReveal === true) {
+            messageRevealButton.textContent = "Ally:";
+            socket.emit("revealMessage", gameCode, getTeam());
+          }
+        });
+      });
+    } else {
+      messageRevealButton.addEventListener("click", () => {
+        axios.post("/canReveal", { gameCode: gameCode, team: getTeam() }).then((res) => {
+          if (res.data.canReveal === true) {
+            messageRevealButton.textContent = "Enemy:";
+            socket.emit("revealMessage", gameCode, getTeam());
+          }
+        });
+      });
+    }
+
+    let messageContent = document.createElement("div");
+    messageContent.className = "messageContent";
+    messageContent.textContent = message;
+
+    messageElement.appendChild(messageRevealButton);
+    messageElement.appendChild(messageContent);
+
+    document.getElementById("messageBox").appendChild(messageElement);
+    document.getElementById("messageBox").scrollTop = document.getElementById("messageBox").scrollHeight;
+  }
 });
 
 socket.on("updateGame", (gameState) => {
@@ -427,8 +551,10 @@ socket.on("updateGame", (gameState) => {
 
   if (playerPosition === "redOC") {
     document.getElementById("powerDisplay").style.width = `${gameState.redShip.power}%`;
+    document.getElementById("healthDisplay").style.width = `${gameState.redShip.health}%`;
   } else if (playerPosition === "blueOC") {
     document.getElementById("powerDisplay").style.width = `${gameState.blueShip.power}%`;
+    document.getElementById("healthDisplay").style.width = `${gameState.blueShip.health}%`;
   }
 });
 
