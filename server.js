@@ -27,6 +27,8 @@ app.use("/", express.static(path.join(__dirname, "/public")));
 app.use("/", router);
 
 let games = {};
+const worldWidth = 1000;
+const worldHeight = 1000;
 
 const createGame = (req, res, next) => {
   let isUniqueCode = false;
@@ -50,10 +52,14 @@ const createGame = (req, res, next) => {
       blueOC: null,
       blueIC: null,
     },
+    redShip: null,
+    blueShip: null,
+    missiles: [],
+    fuels: [],
+    civilians: [],
   };
   games[`${code}`] = gameState;
   req.gameCode = code;
-  console.log(JSON.stringify(games));
   next();
 };
 
@@ -64,8 +70,6 @@ const joinGame = (req, res, next) => {
   }
 
   let gameState = games[`${req.body.joinCode}`];
-
-  console.log(JSON.stringify(gameState));
 
   // Check if the requested position is already filled
   if (gameState.players[`${req.body.joinPosition}`] !== null) {
@@ -95,7 +99,6 @@ const joinGame = (req, res, next) => {
     if (gameState.players[playerType] === null) {
     }
   }
-  console.log(JSON.stringify(games));
   next();
 };
 
@@ -124,9 +127,138 @@ router.post("/setCookies", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  // socket.on("jointtaabs", (roomID, playerID) => {
-  // });
+  socket.on("joinGame", (gameCode, position) => {
+    let gameState = games[`${gameCode}`];
+    gameState.players[`${position}`].hasJoined = true;
+
+    let allJoined = true;
+    for (const playerType in gameState.players) {
+      if (gameState.players[playerType]) {
+        if (!gameState.players[playerType].hasJoined) {
+          allJoined = false;
+        }
+      } else {
+        allJoined = false;
+      }
+    }
+
+    socket.join(gameCode);
+    if (allJoined) {
+      gameState.redShip = {
+        x: Math.random() * worldWidth,
+        y: Math.random() * worldHeight,
+        speed: 1,
+        angle: Math.random() * 2 * Math.PI,
+        angularVelocity: 0,
+        targetAngularVelocity: 0,
+        angularAcceleration: 0.01,
+      };
+
+      gameState.blueShip = {
+        x: Math.random() * worldWidth,
+        y: Math.random() * worldHeight,
+        speed: 1,
+        angle: Math.random() * 2 * Math.PI,
+        angularVelocity: 0,
+        targetAngularVelocity: 0,
+        angularAcceleration: 0.01,
+      };
+
+      io.in(gameCode).emit("startGame", gameState);
+    } else {
+      io.in(gameCode).emit("updateLobby", gameState.players);
+    }
+  });
 });
+
+setInterval(() => {
+  for (let gameCode in games) {
+    let gameState = games[`${gameCode}`];
+
+    if (gameState.redShip === null) {
+      return;
+    }
+
+    // Update red ship
+    gameState.redShip.x +=
+      gameState.redShip.speed * Math.cos(gameState.redShip.angle);
+    gameState.redShip.y +=
+      gameState.redShip.speed * Math.sin(gameState.redShip.angle);
+
+    if (gameState.redShip.x > worldWidth) {
+      gameState.redShip.x -= worldWidth;
+    } else if (gameState.redShip.x < 0) {
+      gameState.redShip.x += worldWidth;
+    }
+    if (gameState.redShip.y > worldHeight) {
+      gameState.redShip.y -= worldHeight;
+    } else if (gameState.redShip.y < 0) {
+      gameState.redShip.y += worldHeight;
+    }
+
+    gameState.redShip.angle += gameState.redShip.angularVelocity;
+    if (
+      Math.abs(
+        gameState.redShip.targetAngularVelocity -
+          gameState.redShip.angularVelocity
+      ) < gameState.redShip.angularAcceleration
+    ) {
+      gameState.redShip.angularVelocity =
+        gameState.redShip.targetAngularVelocity;
+    } else {
+      gameState.redShip.angularVelocity +=
+        (gameState.redShip.angularAcceleration *
+          (gameState.redShip.targetAngularVelocity -
+            gameState.redShip.angularVelocity)) /
+        Math.abs(
+          gameState.redShip.targetAngularVelocity -
+            gameState.redShip.angularVelocity
+        );
+    }
+
+    // Update blue ship
+    gameState.blueShip.x +=
+      gameState.blueShip.speed * Math.cos(gameState.blueShip.angle);
+    gameState.blueShip.y +=
+      gameState.blueShip.speed * Math.sin(gameState.blueShip.angle);
+
+    if (gameState.blueShip.x > worldWidth) {
+      gameState.blueShip.x -= worldWidth;
+    } else if (gameState.blueShip.x < 0) {
+      gameState.blueShip.x += worldWidth;
+    }
+    if (gameState.blueShip.y > worldHeight) {
+      gameState.blueShip.y -= worldHeight;
+    } else if (gameState.blueShip.y < 0) {
+      gameState.blueShip.y += worldHeight;
+    }
+
+    gameState.blueShip.angle += gameState.blueShip.angularVelocity;
+    if (
+      Math.abs(
+        gameState.blueShip.targetAngularVelocity -
+          gameState.blueShip.angularVelocity
+      ) < gameState.blueShip.angularAcceleration
+    ) {
+      gameState.blueShip.angularVelocity =
+        gameState.blueShip.targetAngularVelocity;
+    } else {
+      gameState.blueShip.angularVelocity +=
+        (gameState.blueShip.angularAcceleration *
+          (gameState.blueShip.targetAngularVelocity -
+            gameState.blueShip.angularVelocity)) /
+        Math.abs(
+          gameState.blueShip.targetAngularVelocity -
+            gameState.blueShip.angularVelocity
+        );
+    }
+
+    console.log("Red ship: " + JSON.stringify(gameState.redShip));
+    console.log("Blue ship: " + JSON.stringify(gameState.blueShip));
+
+    io.to(gameCode).emit("updateGame", gameState);
+  }
+}, 15);
 
 module.exports = {
   router: router,

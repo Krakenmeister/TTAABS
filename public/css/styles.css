@@ -80,3 +80,40 @@ body {
   width: 100vw;
   height: 100vw;
 }
+
+#gameWrapper {
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#playerList {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.playerListWrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 40vw;
+}
+
+.playerListLabel {
+  text-align: left;
+}
+
+.playerListValue {
+  text-align: right;
+}
