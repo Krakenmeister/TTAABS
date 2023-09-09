@@ -75,9 +75,11 @@ const joinGame = (req, res, next) => {
 
   // Check for duplicate name
   for (const playerType in gameState.players) {
-    if (gameState.players[playerType].name === req.body.joinName) {
-      req.access = "duplicate";
-      return next();
+    if (gameState.players[playerType]) {
+      if (gameState.players[playerType].name === req.body.joinName) {
+        req.access = "duplicate";
+        return next();
+      }
     }
   }
 
