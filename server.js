@@ -88,6 +88,11 @@ const joinGame = (req, res, next) => {
   };
 
   req.access = "granted";
+
+  for (const playerType in gameState.players) {
+    if (gameState.players[playerType] === null) {
+    }
+  }
   console.log(JSON.stringify(games));
   next();
 };
