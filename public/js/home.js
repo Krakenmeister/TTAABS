@@ -91,7 +91,7 @@ function goPlay() {
                 alert("That name is already taken");
               } else if (res.data.access === "granted") {
                 axios
-                  .post("/getCookies", { gameCode: code, position: position })
+                  .post("/setCookies", { gameCode: code, position: position })
                   .then((res) => {
                     window.location.href = "/play";
                   });
@@ -106,6 +106,70 @@ function goPlay() {
   let joinBtn = document.createElement("div");
   joinBtn.id = "homeJoinBtn";
   joinBtn.textContent = "Join";
+  joinBtn.addEventListener("click", () => {
+    removeAllChildNodes(document.getElementById("homeWrapper"));
+
+    let joinDisplay = document.createElement("div");
+    joinDisplay.id = "joinDisplay";
+    joinDisplay.innerHTML = `
+        <div class="inputWrapper">
+            <div>Room Code:</div>
+            <input type="text" id="joinCode" name="joinCode">
+        </div>
+        <div class="inputWrapper">
+            <div>Name: </div>
+            <input type="text" id="joinName" name="joinName">
+        </div>
+        <div class="inputWrapper">
+            <div>Role: </div>
+            <select name="joinPosition" id="joinPosition">
+                <option value="redOC">Red Operations Commander</option>
+                <option value="redIC">Red Intelligence Commander</option>
+                <option value="blueOC">Blue Operations Commander</option>
+                <option value="blueIC">Blue Intelligence Commander</option>
+            </select>
+        </div>
+        <div id="joinBtnWrapper">
+            <div id="joinBtn">Join</div>
+            <div id="homeBtn">Back</div>
+        </div>
+    `;
+
+    document.getElementById("homeWrapper").appendChild(joinDisplay);
+    document.getElementById("joinBtn").addEventListener("click", () => {
+      let code;
+      if (document.getElementById("joinCode")) {
+        code = document.getElementById("joinCode").value;
+      } else {
+        code = document.getElementById("codeTitle").innerHTML;
+      }
+      let name = document.getElementById("joinName").value;
+      let position = document.getElementById("joinPosition").value;
+      if (verifyName(name)) {
+        axios
+          .post("/join", {
+            joinCode: code,
+            joinName: name,
+            joinPosition: position,
+          })
+          .then((res) => {
+            if (res.data.access === "dne") {
+              alert("Game does not exist");
+            } else if (res.data.access === "occupied") {
+              alert("Selected position is already filled");
+            } else if (res.data.access === "duplicate") {
+              alert("That name is already taken");
+            } else if (res.data.access === "granted") {
+              axios
+                .post("/setCookies", { gameCode: code, position: position })
+                .then((res) => {
+                  window.location.href = "/play";
+                });
+            }
+          });
+      }
+    });
+  });
 
   let homeBtn = document.createElement("div");
   homeBtn.id = "homeBtn";

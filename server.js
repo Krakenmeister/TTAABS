@@ -48,11 +48,12 @@ const createGame = (req, res, next) => {
       redOC: null,
       redIC: null,
       blueOC: null,
-      redOC: null,
+      blueIC: null,
     },
   };
   games[`${code}`] = gameState;
   req.gameCode = code;
+  console.log(JSON.stringify(games));
   next();
 };
 
@@ -64,7 +65,7 @@ const joinGame = (req, res, next) => {
 
   let gameState = games[`${req.body.joinCode}`];
 
-  console.log(gameState);
+  console.log(JSON.stringify(gameState));
 
   // Check if the requested position is already filled
   if (gameState.players[`${req.body.joinPosition}`] !== null) {
@@ -74,7 +75,7 @@ const joinGame = (req, res, next) => {
 
   // Check for duplicate name
   for (const playerType in gameState.players) {
-    if (gameState.players[playerType] === req.body.joinName) {
+    if (gameState.players[playerType].name === req.body.joinName) {
       req.access = "duplicate";
       return next();
     }
@@ -87,6 +88,7 @@ const joinGame = (req, res, next) => {
   };
 
   req.access = "granted";
+  console.log(JSON.stringify(games));
   next();
 };
 
@@ -108,7 +110,7 @@ router.post("/join", joinGame, (req, res) => {
   res.end(JSON.stringify({ access: req.access }));
 });
 
-router.post("/getCookies", (req, res) => {
+router.post("/setCookies", (req, res) => {
   res.cookie("gameCode", req.body.gameCode);
   res.cookie("position", req.body.position);
   res.end();
