@@ -187,20 +187,29 @@ io.on("connection", (socket) => {
     }
     gameState.blueShip.targetAngularVelocity = targetAngularVelocity;
   });
-  socket.on("fire", (gameCode, team, angle, power, range) => {
+  socket.on("fire", (gameCode, team, angle, damage, range) => {
     let gameState = games[`${gameCode}`];
     if (!gameState) {
       return;
     }
 
-    let x, y;
+    let x, y, actualDamage;
     if (team === 0) {
       x = gameState.redShip.x;
       y = gameState.redShip.y;
+      actualDamage = Math.max(Math.floor((parseInt(damage) / 100) * gameState.redShip.power), 1);
+      gameState.redShip.power -= actualDamage;
     } else {
       x = gameState.blueShip.x;
       y = gameState.blueShip.y;
+      actualDamage = Math.max(Math.floor((parseInt(damage) / 100) * gameState.blueShip.power), 1);
+      gameState.blueShip.power -= actualDamage;
     }
+
+    console.log(damage);
+    console.log(actualDamage);
+    console.log(gameState.redShip.power);
+    console.log(gameState.blueShip.power);
 
     let newMissile = {
       x: x,
@@ -209,7 +218,7 @@ io.on("connection", (socket) => {
       angle: angle,
       maxTimer: range,
       timer: 0,
-      damage: power,
+      damage: damage,
       speed: 3,
     };
     gameState.missiles.push(newMissile);
@@ -224,15 +233,13 @@ setInterval(() => {
       return;
     }
 
-    gameState.redShip.power = Math.min(100, gameState.redShip.power + 1);
-    gameState.blueShip.power = Math.min(100, gameState.blueShip.power + 1);
+    gameState.redShip.power = Math.min(100, gameState.redShip.power + 0.1);
+    gameState.blueShip.power = Math.min(100, gameState.blueShip.power + 0.1);
 
     // Update missiles
     for (let i = 0; i < gameState.missiles.length; i++) {
-      gameState.missiles[i].x +=
-        gameState.missiles[i].speed * Math.cos(gameState.missiles[i].angle);
-      gameState.missiles[i].y +=
-        gameState.missiles[i].speed * Math.sin(gameState.missiles[i].angle);
+      gameState.missiles[i].x += gameState.missiles[i].speed * Math.cos(gameState.missiles[i].angle);
+      gameState.missiles[i].y += gameState.missiles[i].speed * Math.sin(gameState.missiles[i].angle);
       if (gameState.missiles[i].x > worldWidth) {
         gameState.missiles[i].x -= worldWidth;
       } else if (gameState.missiles[i].x < 0) {
@@ -251,10 +258,8 @@ setInterval(() => {
     }
 
     // Update red ship
-    gameState.redShip.x +=
-      gameState.redShip.speed * Math.cos(gameState.redShip.angle);
-    gameState.redShip.y +=
-      gameState.redShip.speed * Math.sin(gameState.redShip.angle);
+    gameState.redShip.x += gameState.redShip.speed * Math.cos(gameState.redShip.angle);
+    gameState.redShip.y += gameState.redShip.speed * Math.sin(gameState.redShip.angle);
 
     if (gameState.redShip.x > worldWidth) {
       gameState.redShip.x -= worldWidth;
@@ -268,30 +273,17 @@ setInterval(() => {
     }
 
     gameState.redShip.angle += gameState.redShip.angularVelocity / 100;
-    if (
-      Math.abs(
-        gameState.redShip.targetAngularVelocity -
-          gameState.redShip.angularVelocity
-      ) < gameState.redShip.angularAcceleration
-    ) {
-      gameState.redShip.angularVelocity =
-        gameState.redShip.targetAngularVelocity;
+    if (Math.abs(gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity) < gameState.redShip.angularAcceleration) {
+      gameState.redShip.angularVelocity = gameState.redShip.targetAngularVelocity;
     } else {
       gameState.redShip.angularVelocity +=
-        (gameState.redShip.angularAcceleration *
-          (gameState.redShip.targetAngularVelocity -
-            gameState.redShip.angularVelocity)) /
-        Math.abs(
-          gameState.redShip.targetAngularVelocity -
-            gameState.redShip.angularVelocity
-        );
+        (gameState.redShip.angularAcceleration * (gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity)) /
+        Math.abs(gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity);
     }
 
     // Update blue ship
-    gameState.blueShip.x +=
-      gameState.blueShip.speed * Math.cos(gameState.blueShip.angle);
-    gameState.blueShip.y +=
-      gameState.blueShip.speed * Math.sin(gameState.blueShip.angle);
+    gameState.blueShip.x += gameState.blueShip.speed * Math.cos(gameState.blueShip.angle);
+    gameState.blueShip.y += gameState.blueShip.speed * Math.sin(gameState.blueShip.angle);
 
     if (gameState.blueShip.x > worldWidth) {
       gameState.blueShip.x -= worldWidth;
@@ -305,23 +297,12 @@ setInterval(() => {
     }
 
     gameState.blueShip.angle += gameState.blueShip.angularVelocity / 100;
-    if (
-      Math.abs(
-        gameState.blueShip.targetAngularVelocity -
-          gameState.blueShip.angularVelocity
-      ) < gameState.blueShip.angularAcceleration
-    ) {
-      gameState.blueShip.angularVelocity =
-        gameState.blueShip.targetAngularVelocity;
+    if (Math.abs(gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity) < gameState.blueShip.angularAcceleration) {
+      gameState.blueShip.angularVelocity = gameState.blueShip.targetAngularVelocity;
     } else {
       gameState.blueShip.angularVelocity +=
-        (gameState.blueShip.angularAcceleration *
-          (gameState.blueShip.targetAngularVelocity -
-            gameState.blueShip.angularVelocity)) /
-        Math.abs(
-          gameState.blueShip.targetAngularVelocity -
-            gameState.blueShip.angularVelocity
-        );
+        (gameState.blueShip.angularAcceleration * (gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity)) /
+        Math.abs(gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity);
     }
 
     // Detect collisions
@@ -329,10 +310,8 @@ setInterval(() => {
       if (
         gameState.missiles[i].team === 1 &&
         Math.sqrt(
-          (gameState.missiles[i].x - gameState.redShip.x) *
-            (gameState.missiles[i].x - gameState.redShip.x) +
-            (gameState.missiles[i].y - gameState.redShip.y) *
-              (gameState.missiles[i].y - gameState.redShip.y)
+          (gameState.missiles[i].x - gameState.redShip.x) * (gameState.missiles[i].x - gameState.redShip.x) +
+            (gameState.missiles[i].y - gameState.redShip.y) * (gameState.missiles[i].y - gameState.redShip.y)
         ) < 50
       ) {
         gameState.redShip.health -= gameState.missiles[i].damage;
@@ -341,10 +320,8 @@ setInterval(() => {
       } else if (
         gameState.missiles[i].team === 0 &&
         Math.sqrt(
-          (gameState.missiles[i].x - gameState.blueShip.x) *
-            (gameState.missiles[i].x - gameState.blueShip.x) +
-            (gameState.missiles[i].y - gameState.blueShip.y) *
-              (gameState.missiles[i].y - gameState.blueShip.y)
+          (gameState.missiles[i].x - gameState.blueShip.x) * (gameState.missiles[i].x - gameState.blueShip.x) +
+            (gameState.missiles[i].y - gameState.blueShip.y) * (gameState.missiles[i].y - gameState.blueShip.y)
         ) < 50
       ) {
         gameState.blueShip.health -= gameState.missiles[i].damage;

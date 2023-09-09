@@ -12,11 +12,12 @@ function getTeam() {
 }
 
 function getDamage() {
+  console.log(parseInt(document.getElementById("damageInput").value));
   return parseInt(document.getElementById("damageInput").value);
 }
 
 function getRange() {
-  return 100;
+  return 150;
 }
 
 function drawMissile(x, y) {
@@ -41,14 +42,7 @@ class Battleship {
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(
-      this.x + 10 * Math.cos(this.angle),
-      this.y + 10 * Math.sin(this.angle),
-      5,
-      0,
-      Math.PI * 2,
-      false
-    );
+    ctx.arc(this.x + 10 * Math.cos(this.angle), this.y + 10 * Math.sin(this.angle), 5, 0, Math.PI * 2, false);
     ctx.fillStyle = "black";
     ctx.fill();
   }
@@ -149,18 +143,8 @@ let uiWrapper;
 socket.on("startGame", (gameState) => {
   removeAllChildNodes(document.getElementById("gameWrapper"));
 
-  redShip = new Battleship(
-    gameState.redShip.x,
-    gameState.redShip.y,
-    gameState.redShip.angle,
-    "red"
-  );
-  blueShip = new Battleship(
-    gameState.blueShip.x,
-    gameState.blueShip.y,
-    gameState.blueShip.angle,
-    "blue"
-  );
+  redShip = new Battleship(gameState.redShip.x, gameState.redShip.y, gameState.redShip.angle, "red");
+  blueShip = new Battleship(gameState.blueShip.x, gameState.blueShip.y, gameState.blueShip.angle, "blue");
 
   canvas = document.createElement("canvas");
   canvas.id = "gameCanvas";
@@ -215,12 +199,7 @@ socket.on("startGame", (gameState) => {
       let canvasWidth = window.innerHeight;
       let canvasHeight = window.innerHeight;
 
-      if (
-        event.clientX > 0 &&
-        event.clientX < canvasWidth &&
-        event.clientY > 0 &&
-        event.clientY < canvasHeight
-      ) {
+      if (event.clientX > 0 && event.clientX < canvasWidth && event.clientY > 0 && event.clientY < canvasHeight) {
         mouseOnCanvas = Date.now();
         mouseX = event.clientX;
         mouseY = event.clientY;
@@ -236,12 +215,7 @@ socket.on("startGame", (gameState) => {
         return;
       }
 
-      if (
-        event.clientX > 0 &&
-        event.clientX < canvasWidth &&
-        event.clientY > 0 &&
-        event.clientY < canvasHeight
-      ) {
+      if (event.clientX > 0 && event.clientX < canvasWidth && event.clientY > 0 && event.clientY < canvasHeight) {
         mouseX = event.clientX;
         mouseY = event.clientY;
       } else {
@@ -256,21 +230,11 @@ socket.on("startGame", (gameState) => {
         let canvasWidth = window.innerHeight;
         let canvasHeight = window.innerHeight;
 
-        let angle = Math.atan(
-          (mouseY * (1000 / canvasHeight) - redShip.y) /
-            (mouseX * (1000 / canvasHeight) - redShip.x)
-        );
+        let angle = Math.atan((mouseY * (1000 / canvasHeight) - redShip.y) / (mouseX * (1000 / canvasHeight) - redShip.x));
         if (mouseX * (1000 / canvasHeight) < redShip.x) {
           angle += Math.PI;
         }
-        socket.emit(
-          "fire",
-          gameCode,
-          getTeam(),
-          angle,
-          getDamage(),
-          getRange()
-        );
+        socket.emit("fire", gameCode, getTeam(), angle, getDamage(), getRange());
       }
       mouseOnCanvas = -1;
     });
@@ -284,12 +248,7 @@ socket.on("startGame", (gameState) => {
       let touchX = touch.pageX;
       let touchY = touch.pageY;
 
-      if (
-        touchX > 0 &&
-        touchX < canvasWidth &&
-        touchY > 0 &&
-        touchY < canvasHeight
-      ) {
+      if (touchX > 0 && touchX < canvasWidth && touchY > 0 && touchY < canvasHeight) {
         mouseX = touchX;
         mouseY = touchY;
         mouseOnCanvas = Date.now();
@@ -309,12 +268,7 @@ socket.on("startGame", (gameState) => {
       let touchX = touch.pageX;
       let touchY = touch.pageY;
 
-      if (
-        touchX > 0 &&
-        touchX < canvasWidth &&
-        touchY > 0 &&
-        touchY < canvasHeight
-      ) {
+      if (touchX > 0 && touchX < canvasWidth && touchY > 0 && touchY < canvasHeight) {
         mouseX = touchX;
         mouseY = touchY;
       } else {
@@ -329,21 +283,11 @@ socket.on("startGame", (gameState) => {
         let canvasWidth = window.innerHeight;
         let canvasHeight = window.innerHeight;
 
-        let angle = Math.atan(
-          (mouseY * (1000 / canvasHeight) - redShip.y) /
-            (mouseX * (1000 / canvasHeight) - redShip.x)
-        );
+        let angle = Math.atan((mouseY * (1000 / canvasHeight) - redShip.y) / (mouseX * (1000 / canvasHeight) - redShip.x));
         if (mouseX * (1000 / canvasHeight) < redShip.x) {
           angle += Math.PI;
         }
-        socket.emit(
-          "fire",
-          gameCode,
-          getTeam(),
-          angle,
-          getDamage(),
-          getRange()
-        );
+        socket.emit("fire", gameCode, getTeam(), angle, getDamage(), getRange());
       }
       mouseOnCanvas = -1;
     });
@@ -362,12 +306,7 @@ socket.on("startGame", (gameState) => {
       let canvasWidth = window.innerHeight;
       let canvasHeight = window.innerHeight;
 
-      if (
-        event.clientX > 0 &&
-        event.clientX < canvasWidth &&
-        event.clientY > 0 &&
-        event.clientY < canvasHeight
-      ) {
+      if (event.clientX > 0 && event.clientX < canvasWidth && event.clientY > 0 && event.clientY < canvasHeight) {
         mouseX = event.clientX;
         mouseY = event.clientY;
         mouseOnCanvas = Date.now();
@@ -383,12 +322,7 @@ socket.on("startGame", (gameState) => {
         return;
       }
 
-      if (
-        event.clientX > 0 &&
-        event.clientX < canvasWidth &&
-        event.clientY > 0 &&
-        event.clientY < canvasHeight
-      ) {
+      if (event.clientX > 0 && event.clientX < canvasWidth && event.clientY > 0 && event.clientY < canvasHeight) {
         mouseX = event.clientX;
         mouseY = event.clientY;
       } else {
@@ -403,21 +337,11 @@ socket.on("startGame", (gameState) => {
         let canvasWidth = window.innerHeight;
         let canvasHeight = window.innerHeight;
 
-        let angle = Math.atan(
-          (mouseY * (1000 / canvasHeight) - blueShip.y) /
-            (mouseX * (1000 / canvasHeight) - blueShip.x)
-        );
+        let angle = Math.atan((mouseY * (1000 / canvasHeight) - blueShip.y) / (mouseX * (1000 / canvasHeight) - blueShip.x));
         if (mouseX * (1000 / canvasHeight) < blueShip.x) {
           angle += Math.PI;
         }
-        socket.emit(
-          "fire",
-          gameCode,
-          getTeam(),
-          angle,
-          getDamage(),
-          getRange()
-        );
+        socket.emit("fire", gameCode, getTeam(), angle, getDamage(), getRange());
       }
       mouseOnCanvas = -1;
     });
@@ -431,12 +355,7 @@ socket.on("startGame", (gameState) => {
       let touchX = touch.pageX;
       let touchY = touch.pageY;
 
-      if (
-        touchX > 0 &&
-        touchX < canvasWidth &&
-        touchY > 0 &&
-        touchY < canvasHeight
-      ) {
+      if (touchX > 0 && touchX < canvasWidth && touchY > 0 && touchY < canvasHeight) {
         mouseX = touchX;
         mouseY = touchY;
         mouseOnCanvas = Date.now();
@@ -456,12 +375,7 @@ socket.on("startGame", (gameState) => {
       let touchX = touch.pageX;
       let touchY = touch.pageY;
 
-      if (
-        touchX > 0 &&
-        touchX < canvasWidth &&
-        touchY > 0 &&
-        touchY < canvasHeight
-      ) {
+      if (touchX > 0 && touchX < canvasWidth && touchY > 0 && touchY < canvasHeight) {
         mouseX = touchX;
         mouseY = touchY;
       } else {
@@ -476,21 +390,11 @@ socket.on("startGame", (gameState) => {
         let canvasWidth = window.innerHeight;
         let canvasHeight = window.innerHeight;
 
-        let angle = Math.atan(
-          (mouseY * (1000 / canvasHeight) - blueShip.y) /
-            (mouseX * (1000 / canvasHeight) - blueShip.x)
-        );
+        let angle = Math.atan((mouseY * (1000 / canvasHeight) - blueShip.y) / (mouseX * (1000 / canvasHeight) - blueShip.x));
         if (mouseX * (1000 / canvasHeight) < blueShip.x) {
           angle += Math.PI;
         }
-        socket.emit(
-          "fire",
-          gameCode,
-          getTeam(),
-          angle,
-          getDamage(),
-          getRange()
-        );
+        socket.emit("fire", gameCode, getTeam(), angle, getDamage(), getRange());
       }
       mouseOnCanvas = -1;
     });
@@ -513,6 +417,12 @@ socket.on("updateGame", (gameState) => {
   for (let i = 0; i < gameState.missiles.length; i++) {
     missiles.push(gameState.missiles[i]);
   }
+
+  if (playerPosition === "redOC") {
+    document.getElementById("powerDisplay").style.width = `${gameState.redShip.power}%`;
+  } else if (playerPosition === "blueOC") {
+    document.getElementById("powerDisplay").style.width = `${gameState.blueShip.power}%`;
+  }
 });
 
 function animate() {
@@ -525,40 +435,23 @@ function animate() {
         let canvasHeight = window.innerHeight;
 
         let forwardVector = [-Math.sin(redShip.angle), Math.cos(redShip.angle)];
-        let targetVector = [
-          mouseX * (1000 / canvasWidth) - redShip.x,
-          mouseY * (1000 / canvasHeight) - redShip.y,
-        ];
+        let targetVector = [mouseX * (1000 / canvasWidth) - redShip.x, mouseY * (1000 / canvasHeight) - redShip.y];
 
         let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
+          (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) /
+          Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
         console.log(targetAngularVelocity);
         socket.emit("updateRed", gameCode, targetAngularVelocity);
       } else if (playerPosition === "blueOC") {
         let canvasWidth = window.innerHeight;
         let canvasHeight = window.innerHeight;
 
-        let forwardVector = [
-          -Math.sin(blueShip.angle),
-          Math.cos(blueShip.angle),
-        ];
-        let targetVector = [
-          mouseX * (1000 / canvasWidth) - blueShip.x,
-          mouseY * (1000 / canvasHeight) - blueShip.y,
-        ];
+        let forwardVector = [-Math.sin(blueShip.angle), Math.cos(blueShip.angle)];
+        let targetVector = [mouseX * (1000 / canvasWidth) - blueShip.x, mouseY * (1000 / canvasHeight) - blueShip.y];
 
         let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
+          (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) /
+          Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
         console.log(targetAngularVelocity);
         socket.emit("updateBlue", gameCode, targetAngularVelocity);
       }
@@ -576,6 +469,8 @@ function animate() {
   }
 
   for (let i = 0; i < missiles.length; i++) {
-    drawMissile(missiles[i].x, missiles[i].y);
+    if (!(missiles[i].team === 0 && playerPosition === "blueOC") && !(missiles[i].team === 1 && playerPosition === "redOC")) {
+      drawMissile(missiles[i].x, missiles[i].y);
+    }
   }
 }
