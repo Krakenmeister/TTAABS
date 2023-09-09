@@ -265,12 +265,9 @@ setInterval(() => {
     }
 
     //Spawn new fuels
-    let fuelSpawn = Math.random();
-    console.log(fuelSpawn);
-    if (fuelSpawn < fuelSpawnChance) {
+    if (Math.random() < fuelSpawnChance) {
       gameState.fuels.push({ x: Math.random() * worldWidth, y: Math.random() * worldHeight });
     }
-    console.log(gameState.fuels);
 
     gameState.redShip.power = Math.min(100, gameState.redShip.power + 0.02);
     gameState.blueShip.power = Math.min(100, gameState.blueShip.power + 0.02);
@@ -388,10 +385,27 @@ setInterval(() => {
       }
     }
 
+    // Check for win
+    if (gameState.redShip.health <= 0) {
+      io.to(gameCode).emit("gameWin", 1);
+      delete games[`${gameCode}`];
+
+      setTimeout(function () {
+        io.in(gameCode).disconnectSockets(true);
+      }, 3000);
+    } else if (gameState.blueShip.health <= 0) {
+      io.to(gameCode).emit("gameWin", 1);
+      delete games[`${gameCode}`];
+
+      setTimeout(function () {
+        io.in(gameCode).disconnectSockets(true);
+      }, 3000);
+    } else {
+      io.to(gameCode).emit("updateGame", gameState);
+    }
+
     //console.log("Red ship: " + JSON.stringify(gameState.redShip));
     //console.log("Blue ship: " + JSON.stringify(gameState.blueShip));
-
-    io.to(gameCode).emit("updateGame", gameState);
   }
 }, 15);
 

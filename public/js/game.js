@@ -148,6 +148,8 @@ let mouseOnCanvas = -1;
 let mouseX;
 let mouseY;
 let uiWrapper;
+let gameWinner = -1;
+let winTime = -1;
 socket.on("startGame", (gameState) => {
   removeAllChildNodes(document.getElementById("gameWrapper"));
 
@@ -543,7 +545,7 @@ socket.on("message", (author, receiver, message) => {
       });
     } else {
       messageRevealButton.addEventListener("click", () => {
-        if (messageRevealButton.textContent === "Unknown:") {
+        if (messageRevealButton.textContent !== "Unknown:") {
           return;
         }
 
@@ -595,6 +597,14 @@ socket.on("updateGame", (gameState) => {
   }
 });
 
+socket.on("gameWin", (winner) => {
+  gameWinner = winner;
+  winTime = Date.now();
+  setTimeout(function () {
+    alert("game win");
+  }, 3000);
+});
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -640,10 +650,19 @@ function animate() {
   };
 
   if (playerPosition !== "blueOC") {
-    redShip.draw();
+    if (gameWinner !== 1) {
+      redShip.draw();
+    }
   }
   if (playerPosition !== "redOC") {
-    blueShip.draw();
+    if (gameWinner !== 0) {
+      blueShip.draw();
+    }
+  }
+  if (gameWinner === 0) {
+    // Draw sinking blue ship
+  } else if (gameWinner === 1) {
+    // Draw sinking red ship
   }
 
   for (let i = 0; i < missiles.length; i++) {
