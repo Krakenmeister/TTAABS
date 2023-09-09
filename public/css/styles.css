@@ -117,3 +117,26 @@ body {
 .playerListValue {
   text-align: right;
 }
+
+#messageBox {
+  width: 100%;
+  height: 50vh;
+}
+
+#controlBox {
+  width: 100%;
+  height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+#powerWrapper {
+  outline: 5px solid black;
+  width: 80%;
+}
+
+#powerDisplay {
+  background-color: black;
+}

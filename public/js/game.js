@@ -11,6 +11,21 @@ function getTeam() {
   return 1;
 }
 
+function getDamage() {
+  return parseInt(document.getElementById("damageInput").value);
+}
+
+function getRange() {
+  return 100;
+}
+
+function drawMissile(x, y) {
+  ctx.beginPath();
+  ctx.arc(x, y, 5, 0, Math.PI * 2, false);
+  ctx.fillStyle = "black";
+  ctx.fill();
+}
+
 class Battleship {
   constructor(x, y, angle, color) {
     this.x = x;
@@ -38,6 +53,8 @@ class Battleship {
     ctx.fill();
   }
 }
+
+let missiles = [];
 
 let socket = io();
 
@@ -128,6 +145,7 @@ let blueShip;
 let mouseOnCanvas = -1;
 let mouseX;
 let mouseY;
+let uiWrapper;
 socket.on("startGame", (gameState) => {
   removeAllChildNodes(document.getElementById("gameWrapper"));
 
@@ -149,9 +167,49 @@ socket.on("startGame", (gameState) => {
   canvas.width = 1000;
   canvas.height = 1000;
   ctx = canvas.getContext("2d");
+
+  uiWrapper = document.createElement("div");
+  uiWrapper.style.backgroundColor = "lightgray";
+  uiWrapper.style.position = "fixed";
+  uiWrapper.style.right = 0;
+  uiWrapper.style.top = 0;
+  uiWrapper.style.width = `${window.innerWidth - window.innerHeight}px`;
+  uiWrapper.style.height = "100vh";
+  uiWrapper.style.display = "flex";
+  uiWrapper.style.flexDirection = "column";
+
   animate();
 
   if (playerPosition === "redOC") {
+    let messageBox = document.createElement("div");
+    messageBox.id = "messageBox";
+
+    let controlBox = document.createElement("div");
+    controlBox.id = "controlBox";
+
+    let damageInput = document.createElement("input");
+    damageInput.type = "range";
+    damageInput.id = "damageInput";
+    damageInput.name = "damageInput";
+    damageInput.min = "0";
+    damageInput.max = "100";
+    damageInput.step = "1";
+
+    let powerWrapper = document.createElement("div");
+    powerWrapper.id = "powerWrapper";
+
+    let powerDisplay = document.createElement("div");
+    powerDisplay.id = "powerDisplay";
+    powerDisplay.style.width = `${gameState.redShip.power}%`;
+
+    powerWrapper.appendChild(powerDisplay);
+
+    controlBox.appendChild(damageInput);
+    controlBox.appendChild(powerWrapper);
+
+    uiWrapper.appendChild(messageBox);
+    uiWrapper.appendChild(controlBox);
+
     // Red mouse events
     window.addEventListener("mousedown", (event) => {
       let canvasWidth = window.innerHeight;
@@ -192,12 +250,29 @@ socket.on("startGame", (gameState) => {
       }
     });
     window.addEventListener("mouseup", (event) => {
-      mouseOnCanvas = -1;
-      if (Date.now() - mouseOnCanvas > 500) {
+      if (Date.now() - mouseOnCanvas > 200) {
         socket.emit("updateRed", gameCode, 0);
       } else {
-        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+        let canvasWidth = window.innerHeight;
+        let canvasHeight = window.innerHeight;
+
+        let angle = Math.atan(
+          (mouseY * (1000 / canvasHeight) - redShip.y) /
+            (mouseX * (1000 / canvasHeight) - redShip.x)
+        );
+        if (mouseX * (1000 / canvasHeight) < redShip.x) {
+          angle += Math.PI;
+        }
+        socket.emit(
+          "fire",
+          gameCode,
+          getTeam(),
+          angle,
+          getDamage(),
+          getRange()
+        );
       }
+      mouseOnCanvas = -1;
     });
 
     // Red touch events
@@ -248,14 +323,40 @@ socket.on("startGame", (gameState) => {
       }
     });
     window.addEventListener("touchend", (event) => {
-      mouseOnCanvas = -1;
-      if (Date.now() - mouseOnCanvas > 500) {
+      if (Date.now() - mouseOnCanvas > 200) {
         socket.emit("updateRed", gameCode, 0);
       } else {
-        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+        let canvasWidth = window.innerHeight;
+        let canvasHeight = window.innerHeight;
+
+        let angle = Math.atan(
+          (mouseY * (1000 / canvasHeight) - redShip.y) /
+            (mouseX * (1000 / canvasHeight) - redShip.x)
+        );
+        if (mouseX * (1000 / canvasHeight) < redShip.x) {
+          angle += Math.PI;
+        }
+        socket.emit(
+          "fire",
+          gameCode,
+          getTeam(),
+          angle,
+          getDamage(),
+          getRange()
+        );
       }
+      mouseOnCanvas = -1;
     });
   } else if (playerPosition === "blueOC") {
+    let messageBox = document.createElement("div");
+    messageBox.id = "messageBox";
+
+    let controlBox = document.createElement("div");
+    controlBox.id = "controlBox";
+
+    uiWrapper.appendChild(messageBox);
+    uiWrapper.appendChild(controlBox);
+
     // Blue mouse events
     window.addEventListener("mousedown", (event) => {
       let canvasWidth = window.innerHeight;
@@ -296,12 +397,29 @@ socket.on("startGame", (gameState) => {
       }
     });
     window.addEventListener("mouseup", (event) => {
-      mouseOnCanvas = -1;
-      if (Date.now() - mouseOnCanvas > 500) {
+      if (Date.now() - mouseOnCanvas > 200) {
         socket.emit("updateBlue", gameCode, 0);
       } else {
-        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+        let canvasWidth = window.innerHeight;
+        let canvasHeight = window.innerHeight;
+
+        let angle = Math.atan(
+          (mouseY * (1000 / canvasHeight) - blueShip.y) /
+            (mouseX * (1000 / canvasHeight) - blueShip.x)
+        );
+        if (mouseX * (1000 / canvasHeight) < blueShip.x) {
+          angle += Math.PI;
+        }
+        socket.emit(
+          "fire",
+          gameCode,
+          getTeam(),
+          angle,
+          getDamage(),
+          getRange()
+        );
       }
+      mouseOnCanvas = -1;
     });
 
     // Blue touch events
@@ -352,17 +470,35 @@ socket.on("startGame", (gameState) => {
       }
     });
     window.addEventListener("touchend", (event) => {
-      mouseOnCanvas = -1;
-      if (Date.now() - mouseOnCanvas > 500) {
+      if (Date.now() - mouseOnCanvas > 200) {
         socket.emit("updateBlue", gameCode, 0);
       } else {
-        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+        let canvasWidth = window.innerHeight;
+        let canvasHeight = window.innerHeight;
+
+        let angle = Math.atan(
+          (mouseY * (1000 / canvasHeight) - blueShip.y) /
+            (mouseX * (1000 / canvasHeight) - blueShip.x)
+        );
+        if (mouseX * (1000 / canvasHeight) < blueShip.x) {
+          angle += Math.PI;
+        }
+        socket.emit(
+          "fire",
+          gameCode,
+          getTeam(),
+          angle,
+          getDamage(),
+          getRange()
+        );
       }
+      mouseOnCanvas = -1;
     });
   } else if (playerPosition === "redIC" || playerPosition === "blueIC") {
   }
 
   document.getElementById("gameWrapper").appendChild(canvas);
+  document.getElementById("gameWrapper").appendChild(uiWrapper);
 });
 
 socket.on("updateGame", (gameState) => {
@@ -372,13 +508,18 @@ socket.on("updateGame", (gameState) => {
   blueShip.x = gameState.blueShip.x;
   blueShip.y = gameState.blueShip.y;
   blueShip.angle = gameState.blueShip.angle;
+
+  missiles = [];
+  for (let i = 0; i < gameState.missiles.length; i++) {
+    missiles.push(gameState.missiles[i]);
+  }
 });
 
 function animate() {
   requestAnimationFrame(animate);
 
   if (mouseOnCanvas !== -1) {
-    if (Date.now() - mouseOnCanvas > 500) {
+    if (Date.now() - mouseOnCanvas > 200) {
       if (playerPosition === "redOC") {
         let canvasWidth = window.innerHeight;
         let canvasHeight = window.innerHeight;
@@ -427,6 +568,14 @@ function animate() {
   ctx.fillStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  redShip.draw();
-  blueShip.draw();
+  if (playerPosition !== "blueOC") {
+    redShip.draw();
+  }
+  if (playerPosition !== "redOC") {
+    blueShip.draw();
+  }
+
+  for (let i = 0; i < missiles.length; i++) {
+    drawMissile(missiles[i].x, missiles[i].y);
+  }
 }
