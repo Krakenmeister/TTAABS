@@ -29,6 +29,10 @@ app.use("/", router);
 let games = {};
 const worldWidth = 1000;
 const worldHeight = 1000;
+const revealCost = 33;
+const shipSpeed = 0.33;
+const shipAcceleration = 0.004;
+const fuelSpawnChance = 0.0003;
 
 const createGame = (req, res, next) => {
   let isUniqueCode = false;
@@ -133,9 +137,9 @@ router.post("/canReveal", (req, res) => {
     res.end(JSON.stringify({ canReveal: false }));
   } else {
     if (req.body.team === 0) {
-      res.end(JSON.stringify({ canReveal: gameState.redShip.power > 20 }));
+      res.end(JSON.stringify({ canReveal: gameState.redShip.power > revealCost }));
     } else if (req.body.team === 1) {
-      res.end(JSON.stringify({ canReveal: gameState.blueShip.power > 20 }));
+      res.end(JSON.stringify({ canReveal: gameState.blueShip.power > revealCost }));
     }
   }
 });
@@ -164,11 +168,11 @@ io.on("connection", (socket) => {
       gameState.redShip = {
         x: Math.random() * worldWidth,
         y: Math.random() * worldHeight,
-        speed: 0.33,
+        speed: shipSpeed,
         angle: Math.random() * 2 * Math.PI,
         angularVelocity: 0,
         targetAngularVelocity: 0,
-        angularAcceleration: 0.005,
+        angularAcceleration: shipAcceleration,
         health: 100,
         power: 100,
       };
@@ -176,11 +180,11 @@ io.on("connection", (socket) => {
       gameState.blueShip = {
         x: Math.random() * worldWidth,
         y: Math.random() * worldHeight,
-        speed: 0.33,
+        speed: shipSpeed,
         angle: Math.random() * 2 * Math.PI,
         angularVelocity: 0,
         targetAngularVelocity: 0,
-        angularAcceleration: 0.005,
+        angularAcceleration: shipAcceleration,
         health: 100,
         power: 100,
       };
@@ -238,6 +242,18 @@ io.on("connection", (socket) => {
   socket.on("message", (gameCode, author, receiver, message) => {
     io.to(gameCode).emit("message", author, receiver, message);
   });
+  socket.on("revealMessage", (gameCode, team) => {
+    let gameState = games[`${gameCode}`];
+    if (!gameState) {
+      return;
+    }
+
+    if (team === 0) {
+      gameState.redShip.power = Math.max(0, gameState.redShip.power - revealCost);
+    } else if (team === 1) {
+      gameState.blueShip.power = Math.max(0, gameState.blueShip.power - revealCost);
+    }
+  });
 });
 
 setInterval(() => {
@@ -247,6 +263,14 @@ setInterval(() => {
     if (gameState.redShip === null) {
       return;
     }
+
+    //Spawn new fuels
+    let fuelSpawn = Math.random();
+    console.log(fuelSpawn);
+    if (fuelSpawn < fuelSpawnChance) {
+      gameState.fuels.push({ x: Math.random() * worldWidth, y: Math.random() * worldHeight });
+    }
+    console.log(gameState.fuels);
 
     gameState.redShip.power = Math.min(100, gameState.redShip.power + 0.02);
     gameState.blueShip.power = Math.min(100, gameState.blueShip.power + 0.02);
@@ -342,6 +366,25 @@ setInterval(() => {
         gameState.blueShip.health -= gameState.missiles[i].damage;
         gameState.missiles.splice(i, 1);
         i--;
+      }
+    }
+    for (let i = 0; i < gameState.fuels.length; i++) {
+      if (
+        Math.sqrt(
+          (gameState.fuels[i].x - gameState.redShip.x) * (gameState.fuels[i].x - gameState.redShip.x) +
+            (gameState.fuels[i].y - gameState.redShip.y) * (gameState.fuels[i].y - gameState.redShip.y)
+        ) < 50
+      ) {
+        gameState.redShip.power = 100;
+        gameState.fuels.splice(i, 1);
+      } else if (
+        Math.sqrt(
+          (gameState.fuels[i].x - gameState.blueShip.x) * (gameState.fuels[i].x - gameState.blueShip.x) +
+            (gameState.fuels[i].y - gameState.blueShip.y) * (gameState.fuels[i].y - gameState.blueShip.y)
+        ) < 50
+      ) {
+        gameState.blueShip.power = 100;
+        gameState.fuels.splice(i, 1);
       }
     }
 

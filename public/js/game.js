@@ -27,6 +27,13 @@ function drawMissile(x, y) {
   ctx.fill();
 }
 
+function drawFuel(x, y) {
+  ctx.beginPath();
+  ctx.arc(x, y, 10, 0, Math.PI * 2, false);
+  ctx.fillStyle = "yellow";
+  ctx.fill();
+}
+
 class Battleship {
   constructor(x, y, angle, color) {
     this.x = x;
@@ -49,6 +56,7 @@ class Battleship {
 }
 
 let missiles = [];
+let fuels = [];
 
 let socket = io();
 
@@ -483,12 +491,28 @@ socket.on("startGame", (gameState) => {
 
   if (playerPosition === "redIC" || playerPosition == "blueIC") {
     document.getElementById("messageInputBtnAlly").addEventListener("click", () => {
+      if (document.getElementById("messageInput").value === "") {
+        return;
+      }
       socket.emit("message", gameCode, getTeam(), getTeam(), document.getElementById("messageInput").value);
       document.getElementById("messageInput").value = "";
     });
     document.getElementById("messageInputBtnEnemy").addEventListener("click", () => {
+      if (document.getElementById("messageInput").value === "") {
+        return;
+      }
       socket.emit("message", gameCode, getTeam(), (getTeam() + 1) % 2, document.getElementById("messageInput").value);
       document.getElementById("messageInput").value = "";
+    });
+    document.getElementById("messageInput").addEventListener("keypress", (event) => {
+      if (event.key === "Enter" && document.getElementById("messageInput").value !== "") {
+        if (event.shiftKey) {
+          socket.emit("message", gameCode, getTeam(), (getTeam() + 1) % 2, document.getElementById("messageInput").value);
+        } else {
+          socket.emit("message", gameCode, getTeam(), getTeam(), document.getElementById("messageInput").value);
+        }
+        document.getElementById("messageInput").value = "";
+      }
     });
   }
 });
@@ -506,6 +530,10 @@ socket.on("message", (author, receiver, message) => {
     messageRevealButton.textContent = "Unknown:";
     if (author === receiver) {
       messageRevealButton.addEventListener("click", () => {
+        if (messageRevealButton.textContent !== "Unknown:") {
+          return;
+        }
+
         axios.post("/canReveal", { gameCode: gameCode, team: getTeam() }).then((res) => {
           if (res.data.canReveal === true) {
             messageRevealButton.textContent = "Ally:";
@@ -515,6 +543,10 @@ socket.on("message", (author, receiver, message) => {
       });
     } else {
       messageRevealButton.addEventListener("click", () => {
+        if (messageRevealButton.textContent === "Unknown:") {
+          return;
+        }
+
         axios.post("/canReveal", { gameCode: gameCode, team: getTeam() }).then((res) => {
           if (res.data.canReveal === true) {
             messageRevealButton.textContent = "Enemy:";
@@ -547,6 +579,11 @@ socket.on("updateGame", (gameState) => {
   missiles = [];
   for (let i = 0; i < gameState.missiles.length; i++) {
     missiles.push(gameState.missiles[i]);
+  }
+
+  fuels = [];
+  for (let i = 0; i < gameState.fuels.length; i++) {
+    fuels.push(gameState.fuels[i]);
   }
 
   if (playerPosition === "redOC") {
@@ -612,6 +649,12 @@ function animate() {
   for (let i = 0; i < missiles.length; i++) {
     if (!(missiles[i].team === 0 && playerPosition === "blueOC") && !(missiles[i].team === 1 && playerPosition === "redOC")) {
       drawMissile(missiles[i].x, missiles[i].y);
+    }
+  }
+
+  for (let i = 0; i < fuels.length; i++) {
+    if (playerPosition === "redIC" || playerPosition === "blueIC") {
+      drawFuel(fuels[i].x, fuels[i].y);
     }
   }
 }
