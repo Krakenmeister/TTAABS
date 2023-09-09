@@ -43,15 +43,24 @@ class Battleship {
   }
 
   draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, 30, 0, Math.PI * 2, false);
-    ctx.fillStyle = this.color;
-    ctx.fill();
+    const img = new Image();
+    img.src = this.color === "red" ? "/media/images/ship_red.png" : "/media/images/ship_blue.png";
+    img.onload = () => {
+      ctx.save(); // Save the current state of the canvas
+      ctx.translate(this.x, this.y); // Translate to the object's position
+      ctx.rotate(this.angle + Math.PI/2); // Rotate the canvas by the object's angle
+      ctx.drawImage(img, -30, -93, 32, 100); // Draw the image centered at the object's position
+      ctx.restore(); // Restore the canvas to its previous state
+    };
+    // ctx.beginPath();
+    // ctx.arc(this.x, this.y, 30, 0, Math.PI * 2, false);
+    // ctx.fillStyle = this.color;
+    // ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(this.x + 10 * Math.cos(this.angle), this.y + 10 * Math.sin(this.angle), 5, 0, Math.PI * 2, false);
-    ctx.fillStyle = "black";
-    ctx.fill();
+    // ctx.beginPath();
+    // ctx.arc(this.x + 10 * Math.cos(this.angle), this.y + 10 * Math.sin(this.angle), 5, 0, Math.PI * 2, false);
+    // ctx.fillStyle = "black";
+    // ctx.fill();
   }
 }
 
