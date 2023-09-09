@@ -183,26 +183,30 @@ io.on("connection", (socket) => {
     }
     gameState.blueShip.targetAngularVelocity = targetAngularVelocity;
   });
-  socket.on("fire", (gameCode, team, direction, power, range) => {
+  socket.on("fire", (gameCode, team, angle, power, range) => {
     let gameState = games[`${gameCode}`];
     if (!gameState) {
       return;
     }
 
-    let missileAngle;
-    let ship;
+    let x, y;
     if (team === 0) {
-      ship = gameState.redShip;
+      x = gameState.redShip.x;
+      y = gameState.redShip.y;
     } else {
-      ship = gameState.blueShip;
+      x = gameState.blueShip.x;
+      y = gameState.blueShip.y;
     }
 
     let newMissile = {
+      x: x,
+      y: y,
       team: team,
-      angle: missileAngle,
+      angle: angle,
       maxTimer: range,
       timer: 0,
       damage: power,
+      speed: 3,
     };
     gameState.missiles.push(newMissile);
   });
@@ -214,6 +218,15 @@ setInterval(() => {
 
     if (gameState.redShip === null) {
       return;
+    }
+
+    // Update missiles
+    for (let i = 0; i < gameState.missiles.length; i++) {
+      gameState.missiles[i].x +=
+        gameState.missiles[i].speed * Math.cos(gameState.missiles[i].angle);
+      gameState.missiles[i].y +=
+        gameState.missiles[i].speed * Math.sin(gameState.missiles[i].angle);
+      gameState.missiles[i].timer += 1;
     }
 
     // Update red ship
@@ -289,6 +302,8 @@ setInterval(() => {
             gameState.blueShip.angularVelocity
         );
     }
+
+    // Detect collisions
 
     //console.log("Red ship: " + JSON.stringify(gameState.redShip));
     //console.log("Blue ship: " + JSON.stringify(gameState.blueShip));

@@ -4,6 +4,13 @@ let gameCode = getCookie("gameCode");
 console.log(playerPosition);
 console.log(gameCode);
 
+function getTeam() {
+  if (playerPosition === "redOC" || playerPosition === "redIC") {
+    return 0;
+  }
+  return 1;
+}
+
 class Battleship {
   constructor(x, y, angle, color) {
     this.x = x;
@@ -118,7 +125,9 @@ let canvas;
 let ctx;
 let redShip;
 let blueShip;
-let mouseOnCanvas = false;
+let mouseOnCanvas = -1;
+let mouseX;
+let mouseY;
 socket.on("startGame", (gameState) => {
   removeAllChildNodes(document.getElementById("gameWrapper"));
 
@@ -154,31 +163,18 @@ socket.on("startGame", (gameState) => {
         event.clientY > 0 &&
         event.clientY < canvasHeight
       ) {
-        mouseOnCanvas = true;
-        let forwardVector = [-Math.sin(redShip.angle), Math.cos(redShip.angle)];
-        let targetVector = [
-          event.clientX * (1000 / canvasWidth) - redShip.x,
-          event.clientY * (1000 / canvasHeight) - redShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateRed", gameCode, targetAngularVelocity);
+        mouseOnCanvas = Date.now();
+        mouseX = event.clientX;
+        mouseY = event.clientY;
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
       }
     });
     window.addEventListener("mousemove", (event) => {
       let canvasWidth = window.innerHeight;
       let canvasHeight = window.innerHeight;
 
-      if (!mouseOnCanvas) {
+      if (mouseOnCanvas === -1) {
         return;
       }
 
@@ -188,29 +184,20 @@ socket.on("startGame", (gameState) => {
         event.clientY > 0 &&
         event.clientY < canvasHeight
       ) {
-        let forwardVector = [-Math.sin(redShip.angle), Math.cos(redShip.angle)];
-        let targetVector = [
-          event.clientX * (1000 / canvasWidth) - redShip.x,
-          event.clientY * (1000 / canvasHeight) - redShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateRed", gameCode, targetAngularVelocity);
+        mouseX = event.clientX;
+        mouseY = event.clientY;
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
         socket.emit("updateRed", gameCode, 0);
       }
     });
     window.addEventListener("mouseup", (event) => {
-      mouseOnCanvas = false;
-      socket.emit("updateRed", gameCode, 0);
+      mouseOnCanvas = -1;
+      if (Date.now() - mouseOnCanvas > 500) {
+        socket.emit("updateRed", gameCode, 0);
+      } else {
+        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+      }
     });
 
     // Red touch events
@@ -228,31 +215,18 @@ socket.on("startGame", (gameState) => {
         touchY > 0 &&
         touchY < canvasHeight
       ) {
-        mouseOnCanvas = true;
-        let forwardVector = [-Math.sin(redShip.angle), Math.cos(redShip.angle)];
-        let targetVector = [
-          touchX * (1000 / canvasWidth) - redShip.x,
-          touchY * (1000 / canvasHeight) - redShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateRed", gameCode, targetAngularVelocity);
+        mouseX = touchX;
+        mouseY = touchY;
+        mouseOnCanvas = Date.now();
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
       }
     });
     window.addEventListener("touchmove", (event) => {
       let canvasWidth = window.innerHeight;
       let canvasHeight = window.innerHeight;
 
-      if (!mouseOnCanvas) {
+      if (mouseOnCanvas === -1) {
         return;
       }
 
@@ -266,29 +240,20 @@ socket.on("startGame", (gameState) => {
         touchY > 0 &&
         touchY < canvasHeight
       ) {
-        let forwardVector = [-Math.sin(redShip.angle), Math.cos(redShip.angle)];
-        let targetVector = [
-          touchX * (1000 / canvasWidth) - redShip.x,
-          touchY * (1000 / canvasHeight) - redShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateRed", gameCode, targetAngularVelocity);
+        mouseX = touchX;
+        mouseY = touchY;
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
         socket.emit("updateRed", gameCode, 0);
       }
     });
     window.addEventListener("touchend", (event) => {
-      mouseOnCanvas = false;
-      socket.emit("updateRed", gameCode, 0);
+      mouseOnCanvas = -1;
+      if (Date.now() - mouseOnCanvas > 500) {
+        socket.emit("updateRed", gameCode, 0);
+      } else {
+        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+      }
     });
   } else if (playerPosition === "blueOC") {
     // Blue mouse events
@@ -302,34 +267,18 @@ socket.on("startGame", (gameState) => {
         event.clientY > 0 &&
         event.clientY < canvasHeight
       ) {
-        mouseOnCanvas = true;
-        let forwardVector = [
-          -Math.sin(blueShip.angle),
-          Math.cos(blueShip.angle),
-        ];
-        let targetVector = [
-          event.clientX * (1000 / canvasWidth) - blueShip.x,
-          event.clientY * (1000 / canvasHeight) - blueShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateBlue", gameCode, targetAngularVelocity);
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        mouseOnCanvas = Date.now();
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
       }
     });
     window.addEventListener("mousemove", (event) => {
       let canvasWidth = window.innerHeight;
       let canvasHeight = window.innerHeight;
 
-      if (!mouseOnCanvas) {
+      if (mouseOnCanvas === -1) {
         return;
       }
 
@@ -339,32 +288,20 @@ socket.on("startGame", (gameState) => {
         event.clientY > 0 &&
         event.clientY < canvasHeight
       ) {
-        let forwardVector = [
-          -Math.sin(blueShip.angle),
-          Math.cos(blueShip.angle),
-        ];
-        let targetVector = [
-          event.clientX * (1000 / canvasWidth) - blueShip.x,
-          event.clientY * (1000 / canvasHeight) - blueShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateBlue", gameCode, targetAngularVelocity);
+        mouseX = event.clientX;
+        mouseY = event.clientY;
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
         socket.emit("updateBlue", gameCode, 0);
       }
     });
     window.addEventListener("mouseup", (event) => {
-      mouseOnCanvas = false;
-      socket.emit("updateBlue", gameCode, 0);
+      mouseOnCanvas = -1;
+      if (Date.now() - mouseOnCanvas > 500) {
+        socket.emit("updateBlue", gameCode, 0);
+      } else {
+        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+      }
     });
 
     // Blue touch events
@@ -382,34 +319,18 @@ socket.on("startGame", (gameState) => {
         touchY > 0 &&
         touchY < canvasHeight
       ) {
-        mouseOnCanvas = true;
-        let forwardVector = [
-          Math.cos(blueShip.angle),
-          Math.sin(blueShip.angle),
-        ];
-        let targetVector = [
-          touchX * (1000 / canvasWidth) - blueShip.x,
-          touchY * (1000 / canvasHeight) - blueShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateBlue", gameCode, targetAngularVelocity);
+        mouseX = touchX;
+        mouseY = touchY;
+        mouseOnCanvas = Date.now();
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
       }
     });
     window.addEventListener("touchmove", (event) => {
       let canvasWidth = window.innerHeight;
       let canvasHeight = window.innerHeight;
 
-      if (!mouseOnCanvas) {
+      if (mouseOnCanvas === -1) {
         return;
       }
 
@@ -423,32 +344,20 @@ socket.on("startGame", (gameState) => {
         touchY > 0 &&
         touchY < canvasHeight
       ) {
-        let forwardVector = [
-          Math.cos(blueShip.angle),
-          Math.sin(blueShip.angle),
-        ];
-        let targetVector = [
-          touchX * (1000 / canvasWidth) - blueShip.x,
-          touchY * (1000 / canvasHeight) - blueShip.y,
-        ];
-
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] +
-            forwardVector[1] * targetVector[1]) /
-          Math.sqrt(
-            targetVector[0] * targetVector[0] +
-              targetVector[1] * targetVector[1]
-          );
-        console.log(targetAngularVelocity);
-        socket.emit("updateBlue", gameCode, targetAngularVelocity);
+        mouseX = touchX;
+        mouseY = touchY;
       } else {
-        mouseOnCanvas = false;
+        mouseOnCanvas = -1;
         socket.emit("updateBlue", gameCode, 0);
       }
     });
     window.addEventListener("touchend", (event) => {
-      mouseOnCanvas = false;
-      socket.emit("updateBlue", gameCode, 0);
+      mouseOnCanvas = -1;
+      if (Date.now() - mouseOnCanvas > 500) {
+        socket.emit("updateBlue", gameCode, 0);
+      } else {
+        socket.emit("fire", gameCode, getTeam(), angle, power, range);
+      }
     });
   } else if (playerPosition === "redIC" || playerPosition === "blueIC") {
   }
@@ -467,6 +376,54 @@ socket.on("updateGame", (gameState) => {
 
 function animate() {
   requestAnimationFrame(animate);
+
+  if (mouseOnCanvas !== -1) {
+    if (Date.now() - mouseOnCanvas > 500) {
+      if (playerPosition === "redOC") {
+        let canvasWidth = window.innerHeight;
+        let canvasHeight = window.innerHeight;
+
+        let forwardVector = [-Math.sin(redShip.angle), Math.cos(redShip.angle)];
+        let targetVector = [
+          mouseX * (1000 / canvasWidth) - redShip.x,
+          mouseY * (1000 / canvasHeight) - redShip.y,
+        ];
+
+        let targetAngularVelocity =
+          (forwardVector[0] * targetVector[0] +
+            forwardVector[1] * targetVector[1]) /
+          Math.sqrt(
+            targetVector[0] * targetVector[0] +
+              targetVector[1] * targetVector[1]
+          );
+        console.log(targetAngularVelocity);
+        socket.emit("updateRed", gameCode, targetAngularVelocity);
+      } else if (playerPosition === "blueOC") {
+        let canvasWidth = window.innerHeight;
+        let canvasHeight = window.innerHeight;
+
+        let forwardVector = [
+          -Math.sin(blueShip.angle),
+          Math.cos(blueShip.angle),
+        ];
+        let targetVector = [
+          mouseX * (1000 / canvasWidth) - blueShip.x,
+          mouseY * (1000 / canvasHeight) - blueShip.y,
+        ];
+
+        let targetAngularVelocity =
+          (forwardVector[0] * targetVector[0] +
+            forwardVector[1] * targetVector[1]) /
+          Math.sqrt(
+            targetVector[0] * targetVector[0] +
+              targetVector[1] * targetVector[1]
+          );
+        console.log(targetAngularVelocity);
+        socket.emit("updateBlue", gameCode, targetAngularVelocity);
+      }
+    }
+  }
+
   ctx.fillStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
