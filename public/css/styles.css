@@ -74,15 +74,15 @@ body {
 }
 
 #gameCanvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 98vh;
-    height: 98vh;
-    aspect-ratio: 1/1;
-    border: 2px black solid;
-    margin: 10px;
-    border-radius: 25px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 98vh;
+  height: 98vh;
+  aspect-ratio: 1/1;
+  border: 2px black solid;
+  margin: 0.5vh;
+  border-radius: 25px;
 }
 
 #gameWrapper {

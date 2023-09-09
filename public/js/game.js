@@ -153,6 +153,7 @@ socket.on("startGame", (gameState) => {
   ctx = canvas.getContext("2d");
 
   uiWrapper = document.createElement("div");
+  uiWrapper.id = "uiWrapper";
   uiWrapper.style.backgroundColor = "lightgray";
   uiWrapper.style.position = "fixed";
   uiWrapper.style.right = 0;
@@ -161,6 +162,12 @@ socket.on("startGame", (gameState) => {
   uiWrapper.style.height = "100vh";
   uiWrapper.style.display = "flex";
   uiWrapper.style.flexDirection = "column";
+
+  window.addEventListener("resize", () => {
+    if (document.getElementById("uiWrapper")) {
+      document.getElementById("uiWrapper").style.width = `${window.innerWidth - window.innerHeight}px`;
+    }
+  });
 
   animate();
 
