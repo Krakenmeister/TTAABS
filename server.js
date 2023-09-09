@@ -30,8 +30,8 @@ let games = {};
 const worldWidth = 1000;
 const worldHeight = 1000;
 const revealCost = 33;
-const shipSpeed = 0.33;
-const shipAcceleration = 0.004;
+const shipSpeed = 0.5;
+const shipAcceleration = 0.002;
 const fuelSpawnChance = 0.0003;
 
 const createGame = (req, res, next) => {
