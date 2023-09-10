@@ -20,11 +20,21 @@ function getRange() {
   return 150;
 }
 
-function drawMissile(x, y) {
-  ctx.beginPath();
-  ctx.arc(x, y, 5, 0, Math.PI * 2, false);
-  ctx.fillStyle = "black";
-  ctx.fill();
+function drawMissile(x, y, angle) {
+  const img = new Image();
+  img.src = "/media/images/missile_short.png";
+  img.onload = () => {
+      // ctx.save(); // Save the current state of the canvas
+      // ctx.translate(x, y); // Translate to the object's position
+      ctx.rotate(angle); // Rotate the canvas by the object's angle    
+      ctx.drawImage(img, x, y, 10, 30);
+      // ctx.restore(); // Restore the canvas to its previous state
+  };
+
+  // ctx.beginPath();
+  // ctx.arc(x, y, 5, 0, Math.PI * 2, false);
+  // ctx.fillStyle = "black";
+  // ctx.fill();
 }
 
 function drawFuel(x, y) {
@@ -686,7 +696,6 @@ function animate() {
   img.src = "/media/images/canvas_bg.jpg";
 
   img.onload = function () {
-    // Draw the image onto the canvas
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   };
 
@@ -708,7 +717,7 @@ function animate() {
 
   for (let i = 0; i < missiles.length; i++) {
     if (!(missiles[i].team === 0 && playerPosition === "blueOC") && !(missiles[i].team === 1 && playerPosition === "redOC")) {
-      drawMissile(missiles[i].x, missiles[i].y);
+      drawMissile(missiles[i].x, missiles[i].y, missiles[i].angle);
     }
   }
 
