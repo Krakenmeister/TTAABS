@@ -24,11 +24,11 @@ function drawMissile(x, y, angle) {
   const img = new Image();
   img.src = "/media/images/missile_short.png";
   img.onload = () => {
-      // ctx.save(); // Save the current state of the canvas
-      // ctx.translate(x, y); // Translate to the object's position
-      ctx.rotate(angle); // Rotate the canvas by the object's angle    
-      ctx.drawImage(img, x, y, 10, 30);
-      // ctx.restore(); // Restore the canvas to its previous state
+    ctx.save(); // Save the current state of the canvas
+    ctx.translate(x, y); // Translate to the object's position
+    ctx.rotate(angle + Math.PI / 2); // Rotate the canvas by the object's angle
+    ctx.drawImage(img, -5, -15, 10, 30); // Draw the image centered at the object's position
+    ctx.restore();
   };
 
   // ctx.beginPath();
