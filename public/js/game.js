@@ -7,10 +7,11 @@ console.log(gameCode);
 let socket = io();
 
 // Load all images before joining game so that there is no delay in drawing them to canvas
-let missileImg, redShipImg, blueShipImg;
+let missileImg, redShipImg, blueShipImg, fuelImg;
 let missilePromise = loadImage("/media/images/missile_short.png");
 let redShipPromise = loadImage("/media/images/ship_red.png");
 let blueShipPromise = loadImage("/media/images/ship_blue.png");
+let fuelPromise = loadImage("/media/images/gascan.png");
 
 let backgroundImages = [];
 let backgroundPromises = [];
@@ -20,10 +21,11 @@ for (let i = 0; i < 750; i++) {
 
 Promise.all(backgroundPromises).then((imgs) => {
   backgroundImages = imgs;
-  Promise.all([missilePromise, redShipPromise, blueShipPromise]).then(([img1, img2, img3]) => {
+  Promise.all([missilePromise, redShipPromise, blueShipPromise, fuelPromise]).then(([img1, img2, img3, img4]) => {
     missileImg = img1;
     redShipImg = img2;
     blueShipImg = img3;
+    fuelImg = img4;
     socket.emit("joinGame", gameCode, playerPosition);
   });
 });
@@ -53,10 +55,16 @@ function drawMissile(x, y, angle) {
 }
 
 function drawFuel(x, y) {
-  ctx.beginPath();
-  ctx.arc(x, y, 10, 0, Math.PI * 2, false);
-  ctx.fillStyle = "yellow";
-  ctx.fill();
+  ctx.save();
+  ctx.translate(x, y);
+  // ctx.rotate(angle + Math.PI / 2);
+  ctx.drawImage(fuelImg, -12, -14, 24, 28);
+  ctx.restore();
+
+  // ctx.beginPath();
+  // ctx.arc(x, y, 10, 0, Math.PI * 2, false);
+  // ctx.fillStyle = "yellow";
+  // ctx.fill();
 }
 
 class Battleship {
