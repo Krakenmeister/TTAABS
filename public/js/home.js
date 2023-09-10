@@ -10,7 +10,7 @@ function goHome() {
 
   let playBtn = document.createElement("div");
   playBtn.id = "homePlayBtn";
-  playBtn.classList.add('button');
+  playBtn.classList.add("button");
   playBtn.textContent = "Play";
   playBtn.addEventListener("click", goPlay);
 
@@ -18,7 +18,7 @@ function goHome() {
   aboutBtn.id = "homeAboutBtn";
   aboutBtn.textContent = "About";
   aboutBtn.addEventListener("click", goAbout);
-  aboutBtn.classList.add('button');
+  aboutBtn.classList.add("button");
 
   contentWrapper.appendChild(playBtn);
   contentWrapper.appendChild(aboutBtn);
@@ -39,7 +39,7 @@ function goPlay() {
 
   let hostBtn = document.createElement("div");
   hostBtn.id = "homeHostBtn";
-  hostBtn.classList.add('button');
+  hostBtn.classList.add("button");
   hostBtn.textContent = "Host";
   hostBtn.addEventListener("click", () => {
     axios.post("/host", {}).then((res) => {
@@ -70,29 +70,27 @@ function goPlay() {
         if (document.getElementById("joinCode")) {
           code = document.getElementById("joinCode").value;
         } else {
-          code = document.getElementById("codeTitle").innerHTML;
+          code = document.getElementById("codeTitle").innerHTML.replace(/\D/g, "");
         }
         let position = document.getElementById("joinPosition").value;
-        if (verifyName(name)) {
-          axios
-            .post("/join", {
-              joinCode: code,
-              joinPosition: position,
-            })
-            .then((res) => {
-              if (res.data.access === "dne") {
-                alert("Game does not exist");
-              } else if (res.data.access === "occupied") {
-                alert("Selected position is already filled");
-              } else if (res.data.access === "duplicate") {
-                alert("That name is already taken");
-              } else if (res.data.access === "granted") {
-                axios.post("/setCookies", { gameCode: code, position: position }).then((res) => {
-                  window.location.href = "/play";
-                });
-              }
-            });
-        }
+        axios
+          .post("/join", {
+            joinCode: code,
+            joinPosition: position,
+          })
+          .then((res) => {
+            if (res.data.access === "dne") {
+              alert("Game does not exist");
+            } else if (res.data.access === "occupied") {
+              alert("Selected position is already filled");
+            } else if (res.data.access === "duplicate") {
+              alert("That name is already taken");
+            } else if (res.data.access === "granted") {
+              axios.post("/setCookies", { gameCode: code, position: position }).then((res) => {
+                window.location.href = "/play";
+              });
+            }
+          });
       });
       document.getElementById("homeBtn").addEventListener("click", goHome);
     });
@@ -100,7 +98,7 @@ function goPlay() {
 
   let joinBtn = document.createElement("div");
   joinBtn.id = "homeJoinBtn";
-  joinBtn.classList.add('button');
+  joinBtn.classList.add("button");
   joinBtn.textContent = "Join";
   joinBtn.addEventListener("click", () => {
     removeAllChildNodes(document.getElementById("homeWrapper"));
@@ -133,36 +131,34 @@ function goPlay() {
       if (document.getElementById("joinCode")) {
         code = document.getElementById("joinCode").value;
       } else {
-        code = document.getElementById("codeTitle").innerHTML;
+        code = document.getElementById("codeTitle").innerHTML.replace(/\D/g, "");
       }
       let position = document.getElementById("joinPosition").value;
-      if (verifyName(name)) {
-        axios
-          .post("/join", {
-            joinCode: code,
-            joinPosition: position,
-          })
-          .then((res) => {
-            if (res.data.access === "dne") {
-              alert("Game does not exist");
-            } else if (res.data.access === "occupied") {
-              alert("Selected position is already filled");
-            } else if (res.data.access === "duplicate") {
-              alert("That name is already taken");
-            } else if (res.data.access === "granted") {
-              axios.post("/setCookies", { gameCode: code, position: position }).then((res) => {
-                window.location.href = "/play";
-              });
-            }
-          });
-      }
+      axios
+        .post("/join", {
+          joinCode: code,
+          joinPosition: position,
+        })
+        .then((res) => {
+          if (res.data.access === "dne") {
+            alert("Game does not exist");
+          } else if (res.data.access === "occupied") {
+            alert("Selected position is already filled");
+          } else if (res.data.access === "duplicate") {
+            alert("That name is already taken");
+          } else if (res.data.access === "granted") {
+            axios.post("/setCookies", { gameCode: code, position: position }).then((res) => {
+              window.location.href = "/play";
+            });
+          }
+        });
     });
     document.getElementById("homeBtn").addEventListener("click", goHome);
   });
 
   let homeBtn = document.createElement("div");
   homeBtn.id = "homeBtn";
-  homeBtn.classList.add('button');
+  homeBtn.classList.add("button");
   homeBtn.textContent = "Back";
   homeBtn.addEventListener("click", goHome);
 
@@ -191,7 +187,7 @@ function goAbout() {
 
   let homeBtn = document.createElement("div");
   homeBtn.id = "homeBtn";
-  homeBtn.classList.add('button');
+  homeBtn.classList.add("button");
   homeBtn.textContent = "Back";
   homeBtn.addEventListener("click", goHome);
 
