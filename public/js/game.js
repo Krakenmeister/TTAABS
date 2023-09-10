@@ -1046,9 +1046,7 @@ function animate() {
   blueShip.draw();
 
   for (let i = 0; i < fuels.length; i++) {
-    if (playerPosition === "redIC" || playerPosition === "blueIC") {
-      drawFuel(fuels[i].x, fuels[i].y);
-    }
+    drawFuel(fuels[i].x, fuels[i].y);
   }
 
   for (let i = 0; i < missiles.length; i++) {
