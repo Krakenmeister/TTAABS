@@ -173,33 +173,34 @@ let ambienceLoop = -1;
 let backgroundFrame;
 let frameDirection;
 socket.on("startGame", async (gameState, narrativeMessages) => {
-  console.log(narrativeMessages);
-  removeAllChildNodes(document.getElementById("gameWrapper"));
-  document.getElementById("gameWrapper").style.backgroundColor = "black";
+  if (narrativeMessages) {
+    removeAllChildNodes(document.getElementById("gameWrapper"));
+    document.getElementById("gameWrapper").style.backgroundColor = "black";
 
-  let narrativeWrapper = document.createElement("div");
-  narrativeWrapper.id = "narrativeWrapper";
+    let narrativeWrapper = document.createElement("div");
+    narrativeWrapper.id = "narrativeWrapper";
 
-  let narrativeMessage1 = document.createElement("div");
-  let narrativeMessage2 = document.createElement("div");
-  let narrativeMessage3 = document.createElement("div");
-  let narrativeMessage4 = document.createElement("div");
+    let narrativeMessage1 = document.createElement("div");
+    let narrativeMessage2 = document.createElement("div");
+    let narrativeMessage3 = document.createElement("div");
+    let narrativeMessage4 = document.createElement("div");
 
-  narrativeWrapper.appendChild(narrativeMessage1);
-  narrativeWrapper.appendChild(narrativeMessage2);
-  narrativeWrapper.appendChild(narrativeMessage3);
-  narrativeWrapper.appendChild(narrativeMessage4);
+    narrativeWrapper.appendChild(narrativeMessage1);
+    narrativeWrapper.appendChild(narrativeMessage2);
+    narrativeWrapper.appendChild(narrativeMessage3);
+    narrativeWrapper.appendChild(narrativeMessage4);
 
-  document.getElementById("gameWrapper").appendChild(narrativeWrapper);
+    document.getElementById("gameWrapper").appendChild(narrativeWrapper);
 
-  await printMessageToElement(narrativeMessage1, narrativeMessages[0]);
-  await delay(500);
-  await printMessageToElement(narrativeMessage2, narrativeMessages[1]);
-  await delay(500);
-  await printMessageToElement(narrativeMessage3, narrativeMessages[2]);
-  await delay(750);
-  await printMessageToElement(narrativeMessage4, narrativeMessages[3 + getTeam()]);
-  await delay(2000);
+    await printMessageToElement(narrativeMessage1, narrativeMessages[0]);
+    await delay(500);
+    await printMessageToElement(narrativeMessage2, narrativeMessages[1]);
+    await delay(500);
+    await printMessageToElement(narrativeMessage3, narrativeMessages[2]);
+    await delay(750);
+    await printMessageToElement(narrativeMessage4, narrativeMessages[3 + getTeam()]);
+    await delay(2000);
+  }
 
   gameWinner = -1;
   winTime = -1;
