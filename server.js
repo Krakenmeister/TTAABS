@@ -36,6 +36,12 @@ const fuelSpawnChance = 0.0003;
 const missileSpeed = 8;
 const powerDamageRatio = 0.75;
 
+const narrativeMessages = [
+  ["55PBQ 54304 89416", "13°12'83\"N 12°41'53\"E", "US Naval Base Guam", "Fire in the hole!", "Sir! Sir! We are under attack!"],
+  ["40RDQ 33359 40171", "26°34'51\"N 56°19'51\"E", "Strait of Hormuz", "Identify yourselves or we will open fire...", "Ready the guns..."],
+  ["50QPL 96927 35921", "22°55'11\"N 118°55'13\"E", "South China Sea", "Whatever you do, do not break formation...", "This is no ordinary drill..."],
+];
+
 const createGame = (req, res, next) => {
   let isUniqueCode = false;
   let code;
@@ -62,7 +68,8 @@ const createGame = (req, res, next) => {
     blueShip: null,
     missiles: [],
     fuels: [],
-    civilians: [],
+    civilians: {},
+    greenLight: 0,
   };
   games[`${code}`] = gameState;
   req.gameCode = code;
@@ -181,7 +188,15 @@ io.on("connection", (socket) => {
         power: 100,
       };
 
-      io.in(gameCode).emit("startGame", gameState);
+      // gameState.civilians = {
+      //   x: Math.random() * worldWidth,
+      //   y: Math.random() * worldHeight,
+      //   speed: shipSpeed / 4,
+      //   angle: Math.random() * 2 * Math.PI,
+      //   angularVelocity: 0
+      // }
+
+      io.in(gameCode).emit("startGame", gameState, narrativeMessages[Math.floor(Math.random() * 3)]);
     } else {
       io.in(gameCode).emit("updateLobby", gameState.players);
     }
@@ -261,14 +276,21 @@ io.on("connection", (socket) => {
       gameState.blueShip.power = Math.max(0, gameState.blueShip.power - revealCost);
     }
   });
+  socket.on("greenLight", (gameCode) => {
+    let gameState = games[`${gameCode}`];
+    if (!gameState) {
+      return;
+    }
+    gameState.greenLight++;
+  });
 });
 
 setInterval(() => {
   for (let gameCode in games) {
     let gameState = games[`${gameCode}`];
 
-    if (gameState.redShip === null) {
-      return;
+    if (gameState.redShip === null || gameState.greenLight < 4) {
+      continue;
     }
 
     //Spawn new fuels
@@ -295,9 +317,9 @@ setInterval(() => {
       }
       gameState.missiles[i].timer += 1;
       if (gameState.missiles[i].timer >= gameState.missiles[i].maxTimer) {
+        io.to(gameCode).emit("miss", gameState.missiles[i].x, gameState.missiles[i].y);
         gameState.missiles.splice(i, 1);
         i--;
-        io.to(gameCode).emit("miss");
       }
     }
 
@@ -432,7 +454,7 @@ setInterval(() => {
 
           gameState.missiles = [];
           gameState.fuels = [];
-          gameState.civilians = [];
+          gameState.civilians = {};
 
           io.in(gameCode).emit("startGame", gameState);
         }, 3000);
@@ -469,7 +491,7 @@ setInterval(() => {
 
           gameState.missiles = [];
           gameState.fuels = [];
-          gameState.civilians = [];
+          gameState.civilians = {};
 
           io.in(gameCode).emit("startGame", gameState);
         }, 3000);

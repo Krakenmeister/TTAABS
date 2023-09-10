@@ -172,7 +172,35 @@ let pingLoop = -1;
 let ambienceLoop = -1;
 let backgroundFrame;
 let frameDirection;
-socket.on("startGame", (gameState) => {
+socket.on("startGame", async (gameState, narrativeMessages) => {
+  console.log(narrativeMessages);
+  removeAllChildNodes(document.getElementById("gameWrapper"));
+  document.getElementById("gameWrapper").style.backgroundColor = "black";
+
+  let narrativeWrapper = document.createElement("div");
+  narrativeWrapper.id = "narrativeWrapper";
+
+  let narrativeMessage1 = document.createElement("div");
+  let narrativeMessage2 = document.createElement("div");
+  let narrativeMessage3 = document.createElement("div");
+  let narrativeMessage4 = document.createElement("div");
+
+  narrativeWrapper.appendChild(narrativeMessage1);
+  narrativeWrapper.appendChild(narrativeMessage2);
+  narrativeWrapper.appendChild(narrativeMessage3);
+  narrativeWrapper.appendChild(narrativeMessage4);
+
+  document.getElementById("gameWrapper").appendChild(narrativeWrapper);
+
+  await printMessageToElement(narrativeMessage1, narrativeMessages[0]);
+  await delay(500);
+  await printMessageToElement(narrativeMessage2, narrativeMessages[1]);
+  await delay(500);
+  await printMessageToElement(narrativeMessage3, narrativeMessages[2]);
+  await delay(750);
+  await printMessageToElement(narrativeMessage4, narrativeMessages[3 + getTeam()]);
+  await delay(2000);
+
   gameWinner = -1;
   winTime = -1;
   pingLoop = -1;
@@ -183,8 +211,9 @@ socket.on("startGame", (gameState) => {
   pingLoop = setInterval(playPing, 5000);
   ambienceLoop = setInterval(playAmbience, 320000);
 
+  socket.emit("greenLight", gameCode);
+
   removeAllChildNodes(document.getElementById("gameWrapper"));
-  document.getElementById("gameWrapper").style.backgroundColor = "black";
   document.getElementById("gameWrapper").style.color = "white";
 
   redShip = new Battleship(gameState.redShip.x, gameState.redShip.y, gameState.redShip.angle, "red");
@@ -298,9 +327,14 @@ socket.on("startGame", (gameState) => {
     healthWrapper.appendChild(healthLabel);
     healthWrapper.appendChild(healthDisplayWrapper);
 
+    let roleWrapper = document.createElement("div");
+    roleWrapper.id = "roleWrapper";
+    roleWrapper.textContent = "Red Operations Commander";
+
     controlBox.appendChild(damageWrapper);
     controlBox.appendChild(powerWrapper);
     controlBox.appendChild(healthWrapper);
+    controlBox.appendChild(roleWrapper);
 
     uiWrapper.appendChild(messageBox);
     uiWrapper.appendChild(controlBox);
@@ -482,9 +516,14 @@ socket.on("startGame", (gameState) => {
     healthWrapper.appendChild(healthLabel);
     healthWrapper.appendChild(healthDisplayWrapper);
 
+    let roleWrapper = document.createElement("div");
+    roleWrapper.id = "roleWrapper";
+    roleWrapper.textContent = "Blue Operations Commander";
+
     controlBox.appendChild(damageWrapper);
     controlBox.appendChild(powerWrapper);
     controlBox.appendChild(healthWrapper);
+    controlBox.appendChild(roleWrapper);
 
     uiWrapper.appendChild(messageBox);
     uiWrapper.appendChild(controlBox);
@@ -589,6 +628,7 @@ socket.on("startGame", (gameState) => {
   } else if (playerPosition === "redIC" || playerPosition === "blueIC") {
     uiWrapper.innerHTML = `
         <div id="chatWrapper">
+            <div id="roleWrapper">${playerPosition === "redIC" ? "Red Intelligence Commander" : "Blue Intelligence Commander"}</div>
             <div id="messageInputWrapper">
                 <input type="text" id="messageInput" name="messageInput" placeholder="Enter to Ally, Shift+Enter to Enemy">
                 <div id="messageInputBtnAlly">Ally</div>
@@ -668,6 +708,7 @@ socket.on("message", (author, receiver, message) => {
 
     let messageContent = document.createElement("div");
     messageContent.className = "messageContent";
+    messageContent.textContent = message;
 
     messageElement.appendChild(messageRevealButton);
     messageElement.appendChild(messageContent);
@@ -675,7 +716,7 @@ socket.on("message", (author, receiver, message) => {
     document.getElementById("messageBox").prepend(messageElement);
     document.getElementById("messageBox").scrollTop = document.getElementById("messageBox").scrollHeight;
 
-    printMessageToElement(messageContent, message);
+    // printMessageToElement(messageContent, message);
   } else if (playerPosition === "redIC" || playerPosition === "blueIC") {
     let messageElement = document.createElement("div");
     messageElement.className = "messageElement";
@@ -699,6 +740,7 @@ socket.on("message", (author, receiver, message) => {
 
     let messageContent = document.createElement("div");
     messageContent.className = "messageContent";
+    messageContent.textContent = message;
 
     messageElement.appendChild(messageInfo);
     messageElement.appendChild(messageContent);
@@ -706,7 +748,7 @@ socket.on("message", (author, receiver, message) => {
     document.getElementById("messageWrapper").prepend(messageElement);
     document.getElementById("messageWrapper").scrollTop = document.getElementById("messageWrapper").scrollHeight;
 
-    printMessageToElement(messageContent, message);
+    // printMessageToElement(messageContent, message);
   }
 });
 
@@ -751,10 +793,30 @@ socket.on("hit", (team) => {
   }
 });
 
-socket.on("miss", () => {
+socket.on("miss", (x, y) => {
   if (playerPosition === "redIC" || playerPosition === "blueIC") {
     miss.load();
     miss.play();
+  }
+  bigDisturb(x, y);
+});
+
+async function bigDisturb(x, y) {
+  for (let i = 0; i < 10; i++) {
+    disturb(x, y);
+    await delay(10);
+  }
+}
+
+socket.on("fuel", (team) => {
+  if (
+    (playerPosition === "redOC" && team === 0) ||
+    (playerPosition === "blueOC" && team === 1) ||
+    playerPosition === "redIC" ||
+    playerPosition === "blueIC"
+  ) {
+    power.load();
+    power.play();
   }
 });
 
@@ -974,16 +1036,18 @@ function animate() {
   redShip.draw();
   blueShip.draw();
 
-  for (let i = 0; i < missiles.length; i++) {
-    if (!(missiles[i].team === 0 && playerPosition === "blueOC") && !(missiles[i].team === 1 && playerPosition === "redOC")) {
-      drawMissile(missiles[i].x, missiles[i].y, missiles[i].angle);
-    }
-  }
-
   for (let i = 0; i < fuels.length; i++) {
     if (playerPosition === "redIC" || playerPosition === "blueIC") {
       drawFuel(fuels[i].x, fuels[i].y);
     }
+  }
+
+  for (let i = 0; i < missiles.length; i++) {
+    drawMissile(missiles[i].x, missiles[i].y, missiles[i].angle);
+  }
+
+  if (gameWinner !== -1) {
+    return;
   }
 
   if (playerPosition === "redOC") {
@@ -1010,5 +1074,10 @@ function animate() {
       }
     }
     ctx.putImageData(foggedData, 0, 0);
+  }
+  for (let i = 0; i < missiles.length; i++) {
+    if (!(missiles[i].team === 0 && playerPosition === "blueOC") && !(missiles[i].team === 1 && playerPosition === "redOC")) {
+      drawMissile(missiles[i].x, missiles[i].y, missiles[i].angle);
+    }
   }
 }

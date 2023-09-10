@@ -150,7 +150,7 @@ body {
 
 #controlBox {
   width: 100%;
-  height: 30vh;
+  height: 35vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,7 +239,7 @@ body {
 
 #messageWrapper {
   width: 100%;
-  height: 88vh;
+  height: 83vh;
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
@@ -350,6 +350,26 @@ body {
 #winnerElement {
   font-size: 8vw;
   text-align: center;
+}
+
+#roleWrapper {
+  text-align: center;
+  margin: 2vh 0;
+  width: 80%;
+  height: 5vh;
+  font-size: 5vh;
+  font-family: "VT323", monospace;
+}
+
+#narrativeWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: "VT323", monospace;
+  font-size: 5vw;
+  text-align: center;
+  color: #39ff14;
 }
 
 .blink {

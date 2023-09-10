@@ -1,3 +1,49 @@
+let ping = new Audio("./media/audio/ping.mp3");
+let ambience = new Audio("./media/audio/ambience.mp3");
+let damage = new Audio("./media/audio/damage.mp3");
+let missile = new Audio("./media/audio/missile.mp3");
+let dud = new Audio("./media/audio/dud.mp3");
+let miss = new Audio("./media/audio/miss.mp3");
+let power = new Audio("./media/audio/power.mp3");
+let win = new Audio("./media/audio/win.mp3");
+
+let musicloop1 = new Audio("./media/audio/musicloop1.mp3");
+let musicloop2 = new Audio("./media/audio/musicloop2.mp3");
+let musicloop3 = new Audio("./media/audio/musicloop3.mp3");
+let musicloops = [musicloop1, musicloop2, musicloop3];
+
+ping.volume = 0.05;
+ambience.volume = 0.25;
+power.volume = 0.25;
+
+function playPing() {
+  ping.play();
+}
+
+function playAmbience() {
+  ambience.play();
+}
+
+function playDamage() {
+  damage.play();
+}
+
+function playMissile() {
+  missile.play();
+}
+
+function playDud() {
+  dud.play();
+}
+
+function playPower() {
+  power.play();
+}
+
+function playWin() {
+  win.play();
+}
+
 function removeAllChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
@@ -38,7 +84,7 @@ const delay = (delayInms) => {
   return new Promise((resolve) => setTimeout(resolve, delayInms));
 };
 
-async function printMessageToElement(element, message) {
+async function printMessageToElement(element, message, printSpeed = 25) {
   if (!element) {
     return;
   }
@@ -48,9 +94,14 @@ async function printMessageToElement(element, message) {
       return;
     }
     printedMessage += message[i];
-    element.textContent = printedMessage;
-    await delay(25);
+    let thisPrintedMessage = printedMessage;
+    if (i != message.length - 1) {
+      thisPrintedMessage += "_";
+    }
+    element.textContent = thisPrintedMessage;
+    await delay(printSpeed);
   }
+  return;
 }
 
 const setRandomInterval = (intervalFunction, minDelay, maxDelay) => {
@@ -116,6 +167,7 @@ async function blackout(x, y, pauseRadius = 80, pauseTime = 2000) {
 
     await delay(15);
   }
+  win.play();
   await delay(pauseTime);
   while (circleRadius > 0) {
     blackoutCtx.beginPath();
@@ -128,39 +180,4 @@ async function blackout(x, y, pauseRadius = 80, pauseTime = 2000) {
     await delay(15);
   }
   blackoutCtx.fillRect(0, 0, blackoutCtx.width, blackoutCtx.height);
-}
-
-let ping = new Audio("./media/audio/ping.mp3");
-let ambience = new Audio("./media/audio/ambience.mp3");
-let damage = new Audio("./media/audio/damage.mp3");
-let missile = new Audio("./media/audio/missile.mp3");
-let dud = new Audio("./media/audio/dud.mp3");
-let miss = new Audio("./media/audio/miss.mp3");
-
-let musicloop1 = new Audio("./media/audio/musicloop1.mp3");
-let musicloop2 = new Audio("./media/audio/musicloop2.mp3");
-let musicloop3 = new Audio("./media/audio/musicloop3.mp3");
-let musicloops = [musicloop1, musicloop2, musicloop3];
-
-ping.volume = 0.05;
-ambience.volume = 0.18;
-
-function playPing() {
-  ping.play();
-}
-
-function playAmbience() {
-  ambience.play();
-}
-
-function playDamage() {
-  damage.play();
-}
-
-function playMissile() {
-  missile.play();
-}
-
-function playDud() {
-  dud.play();
 }
