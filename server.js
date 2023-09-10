@@ -31,7 +31,7 @@ const worldWidth = 1000;
 const worldHeight = 1000;
 const revealCost = 33;
 const shipSpeed = 0.5;
-const shipAcceleration = 0.008;
+// const shipAcceleration = 0.008;
 const fuelSpawnChance = 0.0003;
 
 const createGame = (req, res, next) => {
@@ -164,7 +164,6 @@ io.on("connection", (socket) => {
         angle: Math.random() * 2 * Math.PI,
         angularVelocity: 0,
         targetAngularVelocity: 0,
-        angularAcceleration: shipAcceleration,
         health: 100,
         power: 100,
       };
@@ -176,7 +175,6 @@ io.on("connection", (socket) => {
         angle: Math.random() * 2 * Math.PI,
         angularVelocity: 0,
         targetAngularVelocity: 0,
-        angularAcceleration: shipAcceleration,
         health: 100,
         power: 100,
       };
@@ -307,13 +305,14 @@ setInterval(() => {
     }
 
     gameState.redShip.angle += gameState.redShip.angularVelocity / 100;
-    if (Math.abs(gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity) < gameState.redShip.angularAcceleration) {
-      gameState.redShip.angularVelocity = gameState.redShip.targetAngularVelocity;
-    } else {
-      gameState.redShip.angularVelocity +=
-        (gameState.redShip.angularAcceleration * (gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity)) /
-        Math.abs(gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity);
-    }
+    gameState.redShip.angularVelocity = gameState.redShip.targetAngularVelocity;
+    // if (Math.abs(gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity) < gameState.redShip.angularAcceleration) {
+    //   gameState.redShip.angularVelocity = gameState.redShip.targetAngularVelocity;
+    // } else {
+    //   gameState.redShip.angularVelocity +=
+    //     (gameState.redShip.angularAcceleration * (gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity)) /
+    //     Math.abs(gameState.redShip.targetAngularVelocity - gameState.redShip.angularVelocity);
+    // }
 
     // Update blue ship
     gameState.blueShip.x += gameState.blueShip.speed * Math.cos(gameState.blueShip.angle);
@@ -331,13 +330,14 @@ setInterval(() => {
     }
 
     gameState.blueShip.angle += gameState.blueShip.angularVelocity / 100;
-    if (Math.abs(gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity) < gameState.blueShip.angularAcceleration) {
-      gameState.blueShip.angularVelocity = gameState.blueShip.targetAngularVelocity;
-    } else {
-      gameState.blueShip.angularVelocity +=
-        (gameState.blueShip.angularAcceleration * (gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity)) /
-        Math.abs(gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity);
-    }
+    gameState.blueShip.angularVelocity = gameState.blueShip.targetAngularVelocity;
+    // if (Math.abs(gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity) < gameState.blueShip.angularAcceleration) {
+    //   gameState.blueShip.angularVelocity = gameState.blueShip.targetAngularVelocity;
+    // } else {
+    //   gameState.blueShip.angularVelocity +=
+    //     (gameState.blueShip.angularAcceleration * (gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity)) /
+    //     Math.abs(gameState.blueShip.targetAngularVelocity - gameState.blueShip.angularVelocity);
+    // }
 
     // Detect collisions
     for (let i = 0; i < gameState.missiles.length; i++) {
@@ -399,7 +399,7 @@ setInterval(() => {
             angle: Math.random() * 2 * Math.PI,
             angularVelocity: 0,
             targetAngularVelocity: 0,
-            angularAcceleration: shipAcceleration,
+            // angularAcceleration: shipAcceleration,
             health: 100,
             power: 100,
           };
@@ -411,7 +411,7 @@ setInterval(() => {
             angle: Math.random() * 2 * Math.PI,
             angularVelocity: 0,
             targetAngularVelocity: 0,
-            angularAcceleration: shipAcceleration,
+            // angularAcceleration: shipAcceleration,
             health: 100,
             power: 100,
           };

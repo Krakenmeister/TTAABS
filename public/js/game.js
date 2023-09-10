@@ -160,6 +160,9 @@ let uiWrapper;
 let gameWinner = -1;
 let winTime = -1;
 socket.on("startGame", (gameState) => {
+  gameWinner = -1;
+  winTime = -1;
+
   removeAllChildNodes(document.getElementById("gameWrapper"));
 
   redShip = new Battleship(gameState.redShip.x, gameState.redShip.y, gameState.redShip.angle, "red");

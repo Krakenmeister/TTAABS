@@ -25,52 +25,60 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  height: 30vh;
+  height: 50vh;
 }
 
 #homeTitle {
-  font-size: 5vw;
+  font-size: 8vw;
 }
 
 #homePlayBtn {
-  font-size: 2vw;
+  font-size: 5vw;
   margin: 0 3vw;
   cursor: pointer;
 }
 
 #homeAboutBtn {
-  font-size: 2vw;
+  font-size: 5vw;
   margin: 0 3vw;
   cursor: pointer;
 }
 
 #homeBtn {
-  font-size: 2vw;
+  font-size: 5vw;
   margin: 0 3vw;
   cursor: pointer;
 }
 
 #homeAboutText {
-  font-size: 1.6vw;
+  font-size: 3vw;
   margin: 2vh 0;
 }
 
 #homeHostBtn {
-  font-size: 2vw;
+  font-size: 5vw;
   margin: 0 3vw;
   cursor: pointer;
 }
 
 #homeJoinBtn {
-  font-size: 2vw;
+  font-size: 5vw;
   margin: 0 3vw;
   cursor: pointer;
 }
 
 #joinBtn {
-  font-size: 2vw;
+  font-size: 5vw;
   margin: 0 3vw;
   cursor: pointer;
+}
+
+#joinBtnWrapper {
+  display: flex;
+  flex-direction: row;
+  margin-top: 10vh;
+  justify-content: center;
+  align-items: center;
 }
 
 #gameCanvas {
@@ -111,7 +119,8 @@ body {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  width: 40vw;
+  width: 70vw;
+  font-size: 10vh;
 }
 
 .playerListLabel {
@@ -229,4 +238,29 @@ body {
   margin-right: 4%;
   width: 76%;
   text-align: right;
+}
+
+#codeTitle {
+  font-size: 8vw;
+  margin: 5vh 0;
+  text-align: center;
+  cursor: text;
+  user-select: text;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 5vw;
+}
+
+#joinPosition {
+  margin-left: 3vw;
+}
+
+#joinCode {
+  font-size: 3vw;
+  margin-left: 3vw;
 }

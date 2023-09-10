@@ -48,7 +48,7 @@ function goPlay() {
         <div id="codeTitle">${res.data.gameCode}</div>
         <div class="inputWrapper">
             <div>Role: </div>
-            <select name="joinPosition" id="joinPosition">
+            <select name="joinPosition" id="joinPosition" style="font-size: 3vw">
                 <option value="redOC">Red Operations Commander</option>
                 <option value="redIC">Red Intelligence Commander</option>
                 <option value="blueOC">Blue Operations Commander</option>
@@ -110,7 +110,7 @@ function goPlay() {
         </div>
         <div class="inputWrapper">
             <div>Role: </div>
-            <select name="joinPosition" id="joinPosition">
+            <select name="joinPosition" id="joinPosition" style="font-size: 3vw">
                 <option value="redOC">Red Operations Commander</option>
                 <option value="redIC">Red Intelligence Commander</option>
                 <option value="blueOC">Blue Operations Commander</option>
@@ -153,6 +153,7 @@ function goPlay() {
           });
       }
     });
+    document.getElementById("homeBtn").addEventListener("click", goHome);
   });
 
   let homeBtn = document.createElement("div");
