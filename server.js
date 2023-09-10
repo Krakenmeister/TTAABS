@@ -210,6 +210,9 @@ io.on("connection", (socket) => {
     if (!gameState) {
       return;
     }
+    if (!gameState.redShip || !gameState.blueShip) {
+      return;
+    }
 
     let x, y, actualDamage;
     if (team === 0) {

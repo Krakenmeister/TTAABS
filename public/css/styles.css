@@ -265,6 +265,11 @@ body {
   margin-left: 3vw;
 }
 
+#winnerElement {
+  font-size: 8vw;
+  text-align: center;
+}
+
 .blink {
   animation: blink 0.15s linear 3;
 }
