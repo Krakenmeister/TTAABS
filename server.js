@@ -39,7 +39,13 @@ const powerDamageRatio = 0.75;
 const narrativeMessages = [
   ["55PBQ 54304 89416", "13°12'83\"N 12°41'53\"E", "US Naval Base Guam", "Fire in the hole!", "Sir! Sir! We are under attack!"],
   ["40RDQ 33359 40171", "26°34'51\"N 56°19'51\"E", "Strait of Hormuz", "Identify yourselves or we will open fire...", "Ready the guns..."],
-  ["50QPL 96927 35921", "22°55'11\"N 118°55'13\"E", "South China Sea", "Whatever you do, do not break formation...", "This is no ordinary drill..."],
+  [
+    "50QPL 96927 35921",
+    "22°55'11\"N 118°55'13\"E",
+    "South China Sea",
+    "Whatever you do, do not break formation...",
+    "Exercise! Exercise! Exercise! This is not a drill!",
+  ],
 ];
 
 const createGame = (req, res, next) => {
@@ -196,7 +202,7 @@ io.on("connection", (socket) => {
       //   angularVelocity: 0
       // }
 
-      io.in(gameCode).emit("startGame", gameState, narrativeMessages[Math.floor(Math.random() * 3)]);
+      io.in(gameCode).emit("startGame", gameState, narrativeMessages[/*Math.floor(Math.random() * 3)*/ 2]);
     } else {
       io.in(gameCode).emit("updateLobby", gameState.players);
     }
@@ -456,7 +462,7 @@ setInterval(() => {
           gameState.fuels = [];
           gameState.civilians = {};
 
-          io.in(gameCode).emit("startGame", gameState);
+          io.in(gameCode).emit("startGame", gameState, null);
         }, 3000);
       }, 3000);
     } else if (gameState.blueShip.health <= 0) {
@@ -493,7 +499,7 @@ setInterval(() => {
           gameState.fuels = [];
           gameState.civilians = {};
 
-          io.in(gameCode).emit("startGame", gameState);
+          io.in(gameCode).emit("startGame", gameState, null);
         }, 3000);
       }, 3000);
     } else {
