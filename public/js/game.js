@@ -17,7 +17,7 @@ function getDamage() {
 }
 
 function getRange() {
-  return 150;
+  return 55;
 }
 
 function drawMissile(x, y) {
