@@ -1,5 +1,5 @@
 const hostname = "localhost";
-const port = 3000;
+const port = 7000;
 
 const http = require("http");
 const express = require("express");

@@ -13,9 +13,11 @@ let redShipPromise = loadImage("/media/images/ship_red.png");
 let blueShipPromise = loadImage("/media/images/ship_blue.png");
 let fuelPromise = loadImage("/media/images/gascan.png");
 
+const backgroundTotalFrames = 200;
+
 let backgroundImages = [];
 let backgroundPromises = [];
-for (let i = 0; i < 750; i++) {
+for (let i = 0; i < backgroundTotalFrames; i++) {
   backgroundPromises.push(loadImage(`/media/images/waterbackground/${i + 1}.jpeg`));
 }
 
@@ -165,6 +167,13 @@ socket.on("updateLobby", (players) => {
 
   document.getElementById("gameWrapper").appendChild(lobbyDisplay);
 });
+
+let targetRedShipX = 0;
+let targetRedShipY = 0;
+let targetRedShipAngle = 0;
+let targetBlueShipX = 0;
+let targetBlueShipY = 0;
+let targetBlueShipAngle = 0;
 
 let canvas;
 let ctx;
@@ -778,12 +787,7 @@ socket.on("fireDud", (team) => {
 });
 
 socket.on("fireSuccess", (team, damage) => {
-  if (
-    (playerPosition === "redOC" && team === 0) ||
-    (playerPosition === "blueOC" && team === 1) ||
-    playerPosition === "redIC" ||
-    playerPosition === "blueIC"
-  ) {
+  if ((playerPosition === "redOC" && team === 0) || (playerPosition === "blueOC" && team === 1) || playerPosition === "redIC" || playerPosition === "blueIC") {
     missile.volume = damage / 100;
     missile.load();
     missile.play();
@@ -791,12 +795,7 @@ socket.on("fireSuccess", (team, damage) => {
 });
 
 socket.on("hit", (team) => {
-  if (
-    (playerPosition === "redOC" && team === 0) ||
-    (playerPosition === "blueOC" && team === 1) ||
-    playerPosition === "redIC" ||
-    playerPosition === "blueIC"
-  ) {
+  if ((playerPosition === "redOC" && team === 0) || (playerPosition === "blueOC" && team === 1) || playerPosition === "redIC" || playerPosition === "blueIC") {
     damage.load();
     damage.play();
   }
@@ -818,12 +817,7 @@ async function bigDisturb(x, y) {
 }
 
 socket.on("fuel", (team) => {
-  if (
-    (playerPosition === "redOC" && team === 0) ||
-    (playerPosition === "blueOC" && team === 1) ||
-    playerPosition === "redIC" ||
-    playerPosition === "blueIC"
-  ) {
+  if ((playerPosition === "redOC" && team === 0) || (playerPosition === "blueOC" && team === 1) || playerPosition === "redIC" || playerPosition === "blueIC") {
     power.load();
     power.play();
   }
@@ -831,13 +825,19 @@ socket.on("fuel", (team) => {
 
 const disturbArea = 5;
 socket.on("updateGame", (gameState) => {
-  redShip.x = gameState.redShip.x;
-  redShip.y = gameState.redShip.y;
-  redShip.angle = gameState.redShip.angle;
+  targetRedShipX = gameState.redShip.x;
+  targetRedShipY = gameState.redShip.y;
+  targetRedShipAngle = gameState.redShip.angle;
+  targetBlueShipX = gameState.blueShip.x;
+  targetBlueShipY = gameState.blueShip.y;
+  targetBlueShipAngle = gameState.blueShip.angle;
+  // redShip.x = gameState.redShip.x;
+  // redShip.y = gameState.redShip.y;
+  // redShip.angle = gameState.redShip.angle;
   redShip.health = gameState.redShip.health;
-  blueShip.x = gameState.blueShip.x;
-  blueShip.y = gameState.blueShip.y;
-  blueShip.angle = gameState.blueShip.angle;
+  // blueShip.x = gameState.blueShip.x;
+  // blueShip.y = gameState.blueShip.y;
+  // blueShip.angle = gameState.blueShip.angle;
   blueShip.health = gameState.blueShip.health;
 
   disturb(redShip.x + 2 * disturbArea * Math.random() - disturbArea, redShip.y + 2 * disturbArea * Math.random() - disturbArea);
@@ -1003,9 +1003,7 @@ function animate() {
         let forwardVector = [-Math.sin(redShip.angle), Math.cos(redShip.angle)];
         let targetVector = [mouseX * (1000 / canvasWidth) - redShip.x, mouseY * (1000 / canvasHeight) - redShip.y];
 
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) /
-          Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
+        let targetAngularVelocity = (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) / Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
         targetAngularVelocity = (targetAngularVelocity / Math.abs(targetAngularVelocity)) * Math.sqrt(Math.abs(targetAngularVelocity));
         console.log(targetAngularVelocity);
         socket.emit("updateRed", gameCode, targetAngularVelocity);
@@ -1016,9 +1014,7 @@ function animate() {
         let forwardVector = [-Math.sin(blueShip.angle), Math.cos(blueShip.angle)];
         let targetVector = [mouseX * (1000 / canvasWidth) - blueShip.x, mouseY * (1000 / canvasHeight) - blueShip.y];
 
-        let targetAngularVelocity =
-          (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) /
-          Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
+        let targetAngularVelocity = (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) / Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
         targetAngularVelocity = (targetAngularVelocity / Math.abs(targetAngularVelocity)) * Math.sqrt(Math.abs(targetAngularVelocity));
         console.log(targetAngularVelocity);
         socket.emit("updateBlue", gameCode, targetAngularVelocity);
@@ -1027,7 +1023,7 @@ function animate() {
   }
 
   backgroundFrame = backgroundFrame + frameDirection;
-  if (backgroundFrame >= 749 || backgroundFrame <= 0) {
+  if (backgroundFrame >= backgroundTotalFrames - 1 || backgroundFrame <= 0) {
     frameDirection *= -1;
   }
 
@@ -1042,6 +1038,23 @@ function animate() {
   newframe();
   ctx.putImageData(ripple, 0, 0);
 
+  if (Math.abs(targetRedShipX - redShip.x) > 100 || Math.abs(targetRedShipY - redShip.y > 100)) {
+    redShip.x = targetRedShipX;
+    redShip.y = targetRedShipY;
+  } else {
+    redShip.x += (targetRedShipX - redShip.x) * 0.5;
+    redShip.y += (targetRedShipY - redShip.y) * 0.5;
+  }
+  redShip.angle += (targetRedShipAngle - redShip.angle) * 0.5;
+
+  if (Math.abs(targetBlueShipX - blueShip.x) > 100 || Math.abs(targetBlueShipY - blueShip.y > 100)) {
+    blueShip.x = targetBlueShipX;
+    blueShip.y = targetBlueShipY;
+  } else {
+    blueShip.x += (targetBlueShipX - blueShip.x) * 0.5;
+    blueShip.y += (targetBlueShipY - blueShip.y) * 0.5;
+  }
+  blueShip.angle += (targetBlueShipAngle - blueShip.angle) * 0.5;
   redShip.draw();
   blueShip.draw();
 
