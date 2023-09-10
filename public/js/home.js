@@ -10,6 +10,7 @@ function goHome() {
 
   let playBtn = document.createElement("div");
   playBtn.id = "homePlayBtn";
+  playBtn.classList.add('button');
   playBtn.textContent = "Play";
   playBtn.addEventListener("click", goPlay);
 
@@ -17,6 +18,7 @@ function goHome() {
   aboutBtn.id = "homeAboutBtn";
   aboutBtn.textContent = "About";
   aboutBtn.addEventListener("click", goAbout);
+  aboutBtn.classList.add('button');
 
   contentWrapper.appendChild(playBtn);
   contentWrapper.appendChild(aboutBtn);
@@ -37,6 +39,7 @@ function goPlay() {
 
   let hostBtn = document.createElement("div");
   hostBtn.id = "homeHostBtn";
+  hostBtn.classList.add('button');
   hostBtn.textContent = "Host";
   hostBtn.addEventListener("click", () => {
     axios.post("/host", {}).then((res) => {
@@ -45,10 +48,10 @@ function goPlay() {
       let codeDisplay = document.createElement("div");
       codeDisplay.id = "codeDisplay";
       codeDisplay.innerHTML = `
-        <div id="codeTitle">${res.data.gameCode}</div>
+        <div id="codeTitle">Room code: ${res.data.gameCode}</div>
         <div class="inputWrapper">
             <div>Role: </div>
-            <select name="joinPosition" id="joinPosition" style="font-size: 3vw">
+            <select name="joinPosition" id="joinPosition">
                 <option value="redOC">Red Operations Commander</option>
                 <option value="redIC">Red Intelligence Commander</option>
                 <option value="blueOC">Blue Operations Commander</option>
@@ -56,8 +59,8 @@ function goPlay() {
             </select>
         </div>
         <div id="joinBtnWrapper">
-            <div id="joinBtn">Join</div>
-            <div id="homeBtn">Back</div>
+            <div id="joinBtn" class="button">Join</div>
+            <div id="homeBtn" class="button">Back</div>
         </div>
       `;
 
@@ -97,6 +100,7 @@ function goPlay() {
 
   let joinBtn = document.createElement("div");
   joinBtn.id = "homeJoinBtn";
+  joinBtn.classList.add('button');
   joinBtn.textContent = "Join";
   joinBtn.addEventListener("click", () => {
     removeAllChildNodes(document.getElementById("homeWrapper"));
@@ -110,7 +114,7 @@ function goPlay() {
         </div>
         <div class="inputWrapper">
             <div>Role: </div>
-            <select name="joinPosition" id="joinPosition" style="font-size: 3vw">
+            <select name="joinPosition" id="joinPosition">
                 <option value="redOC">Red Operations Commander</option>
                 <option value="redIC">Red Intelligence Commander</option>
                 <option value="blueOC">Blue Operations Commander</option>
@@ -118,8 +122,8 @@ function goPlay() {
             </select>
         </div>
         <div id="joinBtnWrapper">
-            <div id="joinBtn">Join</div>
-            <div id="homeBtn">Back</div>
+            <div id="joinBtn" class="button">Join</div>
+            <div id="homeBtn" class="button">Back</div>
         </div>
     `;
 
@@ -158,6 +162,7 @@ function goPlay() {
 
   let homeBtn = document.createElement("div");
   homeBtn.id = "homeBtn";
+  homeBtn.classList.add('button');
   homeBtn.textContent = "Back";
   homeBtn.addEventListener("click", goHome);
 
@@ -182,10 +187,11 @@ function goAbout() {
 
   let aboutText = document.createElement("div");
   aboutText.id = "homeAboutText";
-  aboutText.innerHTML = `This is a submission for the Armed Forces Game Jam 2023.`;
+  aboutText.innerHTML = `<h1>About</h1>This is a submission for the Armed Forces Game Jam 2023.`;
 
   let homeBtn = document.createElement("div");
   homeBtn.id = "homeBtn";
+  homeBtn.classList.add('button');
   homeBtn.textContent = "Back";
   homeBtn.addEventListener("click", goHome);
 
