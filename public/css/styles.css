@@ -133,10 +133,19 @@ body {
 
 #messageBox {
   width: 100%;
-  height: 70vh;
+  height: 68vh;
+  margin-top: 2vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
   overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#messageBox::-webkit-scrollbar {
+  display: none;
 }
 
 #controlBox {
@@ -146,32 +155,68 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  font-family: "VT323", monospace;
+  font-size: 5vh;
 }
 
 #powerWrapper {
-  outline: 2px solid black;
-  background-color: white;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   width: 80%;
-  height: 5vh;
-  margin: 1vh 0;
+  height: 4vh;
+  margin: 2vh 0;
+  background-color: black;
+}
+
+#powerDisplayWrapper {
+  width: 70%;
+  outline: 2px solid #39ff14;
+  background-color: black;
+}
+
+#powerLabel {
+  width: 30%;
 }
 
 #powerDisplay {
-  background-color: black;
-  height: 5vh;
+  background-color: #39ff14;
+  height: 4vh;
 }
 
 #healthWrapper {
-  outline: 2px solid black;
-  background-color: white;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   width: 80%;
-  height: 5vh;
+  height: 4vh;
   margin: 1vh 0;
+  background-color: black;
+}
+
+#healthDisplayWrapper {
+  width: 70%;
+  outline: 2px solid #39ff14;
+  background-color: black;
+}
+
+#healthLabel {
+  width: 30%;
 }
 
 #healthDisplay {
-  background-color: green;
-  height: 5vh;
+  background-color: #39ff14;
+  height: 4vh;
+}
+
+#damageInput {
+  width: 100%;
+}
+
+#damageLabel {
+  width: 100vh;
 }
 
 #damageWrapper {
@@ -184,42 +229,69 @@ body {
 }
 
 #chatWrapper {
-  height: 50vh;
+  height: 100vh;
   width: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 #messageWrapper {
   width: 100%;
-  height: auto;
+  height: 88vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  margin-bottom: 2vh;
+  margin-top: 2vh;
+}
+
+#messageWrapper::-webkit-scrollbar {
+  display: none;
 }
 
 #messageInputWrapper {
-  width: 100%;
-  height: 5vh;
+  width: 90%;
+  height: 8vh;
   display: flex;
   flex-direction: row;
+  line-height: 8vh;
+  font-family: "VT323", monospace;
 }
 
 #messageInput {
   height: 5vh;
   line-height: 5vh;
+  font-size: 4vh;
   width: 70%;
+  background-color: black;
+  color: #39ff14;
+  font-family: "VT323", monospace;
 }
 
 #messageInputBtnAlly {
   height: 5vh;
   line-height: 5vh;
-  width: 10%;
+  font-size: 5vh;
+  width: 15%;
   text-align: center;
+  outline: 1px solid #39ff14;
+  cursor: pointer;
 }
 
 #messageInputBtnEnemy {
   height: 5vh;
   line-height: 5vh;
-  width: 10%;
+  font-size: 5vh;
+  width: 15%;
   text-align: center;
+  outline: 1px solid #39ff14;
+  cursor: pointer;
 }
 
 .messageElement {
@@ -227,17 +299,27 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  font-size: 5vh;
 }
 
 .messageRevealButton {
-  width: 16%;
+  width: 36%;
   margin-left: 4%;
+  font-family: "VT323", monospace;
+}
+
+.messageInfo {
+  width: 36%;
+  margin-left: 4%;
+  font-family: "VT323", monospace;
 }
 
 .messageContent {
   margin-right: 4%;
-  width: 76%;
+  width: 56%;
   text-align: right;
+  font-family: "VT323", monospace;
+  word-wrap: break-word;
 }
 
 #codeTitle {
@@ -283,4 +365,43 @@ body {
   100% {
     opacity: 1;
   }
+}
+
+/*Chrome*/
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  input[type="range"] {
+    overflow: hidden;
+    width: 100%;
+    -webkit-appearance: none;
+    background-color: white;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 5vh;
+    -webkit-appearance: none;
+    color: #39ff14;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 15px;
+    -webkit-appearance: none;
+    height: 5vh;
+    cursor: ew-resize;
+    background: gray;
+    box-shadow: -100% 0 0 100% #39ff14;
+  }
+}
+/** FF*/
+input[type="range"]::-moz-range-progress {
+  background-color: #39ff14;
+}
+input[type="range"]::-moz-range-track {
+  background-color: white;
+}
+/* IE*/
+input[type="range"]::-ms-fill-lower {
+  background-color: #39ff14;
+}
+input[type="range"]::-ms-fill-upper {
+  background-color: white;
 }

@@ -4,6 +4,30 @@ let gameCode = getCookie("gameCode");
 console.log(playerPosition);
 console.log(gameCode);
 
+let socket = io();
+
+// Load all images before joining game so that there is no delay in drawing them to canvas
+let missileImg, redShipImg, blueShipImg;
+let missilePromise = loadImage("/media/images/missile_short.png");
+let redShipPromise = loadImage("/media/images/ship_red.png");
+let blueShipPromise = loadImage("/media/images/ship_blue.png");
+
+let backgroundImages = [];
+let backgroundPromises = [];
+for (let i = 0; i < 750; i++) {
+  backgroundPromises.push(loadImage(`/media/images/waterbackground/${i + 1}.png`));
+}
+
+Promise.all(backgroundPromises).then((imgs) => {
+  backgroundImages = imgs;
+  Promise.all([missilePromise, redShipPromise, blueShipPromise]).then(([img1, img2, img3]) => {
+    missileImg = img1;
+    redShipImg = img2;
+    blueShipImg = img3;
+    socket.emit("joinGame", gameCode, playerPosition);
+  });
+});
+
 function getTeam() {
   if (playerPosition === "redOC" || playerPosition === "redIC") {
     return 0;
@@ -21,20 +45,11 @@ function getRange() {
 }
 
 function drawMissile(x, y, angle) {
-  const img = new Image();
-  img.src = "/media/images/missile_short.png";
-  img.onload = () => {
-    ctx.save(); // Save the current state of the canvas
-    ctx.translate(x, y); // Translate to the object's position
-    ctx.rotate(angle + Math.PI / 2); // Rotate the canvas by the object's angle
-    ctx.drawImage(img, -5, -15, 10, 30); // Draw the image centered at the object's position
-    ctx.restore();
-  };
-
-  // ctx.beginPath();
-  // ctx.arc(x, y, 5, 0, Math.PI * 2, false);
-  // ctx.fillStyle = "black";
-  // ctx.fill();
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle + Math.PI / 2);
+  ctx.drawImage(missileImg, -5, -15, 10, 30);
+  ctx.restore();
 }
 
 function drawFuel(x, y) {
@@ -53,33 +68,17 @@ class Battleship {
   }
 
   draw() {
-    const img = new Image();
-    img.src = this.color === "red" ? "/media/images/ship_red.png" : "/media/images/ship_blue.png";
-    img.onload = () => {
-      ctx.save(); // Save the current state of the canvas
-      ctx.translate(this.x, this.y); // Translate to the object's position
-      ctx.rotate(this.angle + Math.PI / 2); // Rotate the canvas by the object's angle
-      ctx.drawImage(img, -16, -50, 32, 100); // Draw the image centered at the object's position
-      ctx.restore(); // Restore the canvas to its previous state
-    };
-    // ctx.beginPath();
-    // ctx.arc(this.x, this.y, 30, 0, Math.PI * 2, false);
-    // ctx.fillStyle = this.color;
-    // ctx.fill();
-
-    // ctx.beginPath();
-    // ctx.arc(this.x + 10 * Math.cos(this.angle), this.y + 10 * Math.sin(this.angle), 5, 0, Math.PI * 2, false);
-    // ctx.fillStyle = "black";
-    // ctx.fill();
+    ctx.save(); // Save the current state of the canvas
+    ctx.translate(this.x, this.y); // Translate to the object's position
+    ctx.rotate(this.angle + Math.PI / 2); // Rotate the canvas by the object's angle
+    ctx.drawImage(this.color === "red" ? redShipImg : blueShipImg, -16, -50, 32, 100); // Draw the image centered at the object's position
+    ctx.restore(); // Restore the canvas to its previous state
   }
 }
 
 let missiles = [];
 let fuels = [];
 
-let socket = io();
-
-socket.emit("joinGame", gameCode, playerPosition);
 socket.on("updateLobby", (players) => {
   removeAllChildNodes(document.getElementById("gameWrapper"));
 
@@ -169,11 +168,24 @@ let mouseY;
 let uiWrapper;
 let gameWinner = -1;
 let winTime = -1;
+let pingLoop = -1;
+let ambienceLoop = -1;
+let backgroundFrame;
+let frameDirection;
 socket.on("startGame", (gameState) => {
   gameWinner = -1;
   winTime = -1;
+  pingLoop = -1;
+  ambienceLoop = -1;
+
+  playPing();
+  playAmbience();
+  pingLoop = setInterval(playPing, 5000);
+  ambienceLoop = setInterval(playAmbience, 320000);
 
   removeAllChildNodes(document.getElementById("gameWrapper"));
+  document.getElementById("gameWrapper").style.backgroundColor = "black";
+  document.getElementById("gameWrapper").style.color = "white";
 
   redShip = new Battleship(gameState.redShip.x, gameState.redShip.y, gameState.redShip.angle, "red");
   blueShip = new Battleship(gameState.blueShip.x, gameState.blueShip.y, gameState.blueShip.angle, "blue");
@@ -186,7 +198,8 @@ socket.on("startGame", (gameState) => {
 
   uiWrapper = document.createElement("div");
   uiWrapper.id = "uiWrapper";
-  uiWrapper.style.backgroundColor = "lightgray";
+  uiWrapper.style.backgroundColor = "black";
+  uiWrapper.style.color = "#39FF14";
   uiWrapper.style.position = "fixed";
   uiWrapper.style.right = 0;
   uiWrapper.style.top = 0;
@@ -201,6 +214,8 @@ socket.on("startGame", (gameState) => {
     }
   });
 
+  backgroundFrame = 0;
+  frameDirection = 1;
   animate();
 
   if (playerPosition === "redOC") {
@@ -214,37 +229,74 @@ socket.on("startGame", (gameState) => {
     damageWrapper.id = "damageWrapper";
 
     let damageLabel = document.createElement("div");
-    damageLabel.textContent = "Missile damage:";
+    damageLabel.textContent = "Missile power:";
     damageLabel.id = "damageLabel";
 
     let damageInput = document.createElement("input");
     damageInput.type = "range";
     damageInput.id = "damageInput";
     damageInput.name = "damageInput";
-    damageInput.min = "0";
+    damageInput.min = "20";
     damageInput.max = "100";
     damageInput.step = "1";
+    damageInput.value = "100";
+    damageInput.style.background = `linear-gradient(to right, #39ff14 100%, white 100%)`;
+    damageInput.addEventListener("input", (event) => {
+      const tempSliderValue = event.target.value;
+      const tempSliderMax = event.target.max;
+      const tempSliderMin = event.target.min;
+      const progress = ((tempSliderValue - tempSliderMin) / (tempSliderMax - tempSliderMin)) * 100;
+
+      document.getElementById("damageAmount").textContent = tempSliderValue;
+
+      document.getElementById("damageInput").style.background = `linear-gradient(to right, #39ff14 ${progress}%, white ${progress}%)`;
+    });
+
+    let damageAmount = document.createElement("div");
+    damageAmount.textContent = "100";
+    damageAmount.id = "damageAmount";
 
     damageWrapper.appendChild(damageLabel);
     damageWrapper.appendChild(damageInput);
+    damageWrapper.appendChild(damageAmount);
 
     let powerWrapper = document.createElement("div");
     powerWrapper.id = "powerWrapper";
 
+    let powerLabel = document.createElement("div");
+    powerLabel.id = "powerLabel";
+    powerLabel.textContent = "Power:";
+
+    let powerDisplayWrapper = document.createElement("div");
+    powerDisplayWrapper.id = "powerDisplayWrapper";
+
     let powerDisplay = document.createElement("div");
     powerDisplay.id = "powerDisplay";
-    powerDisplay.style.width = `${gameState.redShip.power}%`;
+    powerDisplay.style.width = `${gameState.blueShip.power}%`;
 
-    powerWrapper.appendChild(powerDisplay);
+    powerDisplayWrapper.appendChild(powerDisplay);
+
+    powerWrapper.appendChild(powerLabel);
+    powerWrapper.appendChild(powerDisplayWrapper);
 
     let healthWrapper = document.createElement("div");
     healthWrapper.id = "healthWrapper";
+
+    let healthLabel = document.createElement("div");
+    healthLabel.id = "healthLabel";
+    healthLabel.textContent = "Health:";
+
+    let healthDisplayWrapper = document.createElement("div");
+    healthDisplayWrapper.id = "healthDisplayWrapper";
 
     let healthDisplay = document.createElement("div");
     healthDisplay.id = "healthDisplay";
     healthDisplay.style.width = `${gameState.redShip.health}%`;
 
-    healthWrapper.appendChild(healthDisplay);
+    healthDisplayWrapper.appendChild(healthDisplay);
+
+    healthWrapper.appendChild(healthLabel);
+    healthWrapper.appendChild(healthDisplayWrapper);
 
     controlBox.appendChild(damageWrapper);
     controlBox.appendChild(powerWrapper);
@@ -361,37 +413,74 @@ socket.on("startGame", (gameState) => {
     damageWrapper.id = "damageWrapper";
 
     let damageLabel = document.createElement("div");
-    damageLabel.textContent = "Missile damage:";
+    damageLabel.textContent = "Missile power:";
     damageLabel.id = "damageLabel";
 
     let damageInput = document.createElement("input");
     damageInput.type = "range";
     damageInput.id = "damageInput";
     damageInput.name = "damageInput";
-    damageInput.min = "0";
+    damageInput.min = "20";
     damageInput.max = "100";
     damageInput.step = "1";
+    damageInput.value = "100";
+    damageInput.style.background = `linear-gradient(to right, #39ff14 100%, white 100%)`;
+    damageInput.addEventListener("input", (event) => {
+      const tempSliderValue = event.target.value;
+      const tempSliderMax = event.target.max;
+      const tempSliderMin = event.target.min;
+      const progress = ((tempSliderValue - tempSliderMin) / (tempSliderMax - tempSliderMin)) * 100;
+
+      document.getElementById("damageAmount").textContent = tempSliderValue;
+
+      document.getElementById("damageInput").style.background = `linear-gradient(to right, #39ff14 ${progress}%, white ${progress}%)`;
+    });
+
+    let damageAmount = document.createElement("div");
+    damageAmount.textContent = "100";
+    damageAmount.id = "damageAmount";
 
     damageWrapper.appendChild(damageLabel);
     damageWrapper.appendChild(damageInput);
+    damageWrapper.appendChild(damageAmount);
 
     let powerWrapper = document.createElement("div");
     powerWrapper.id = "powerWrapper";
+
+    let powerLabel = document.createElement("div");
+    powerLabel.id = "powerLabel";
+    powerLabel.textContent = "Power:";
+
+    let powerDisplayWrapper = document.createElement("div");
+    powerDisplayWrapper.id = "powerDisplayWrapper";
 
     let powerDisplay = document.createElement("div");
     powerDisplay.id = "powerDisplay";
     powerDisplay.style.width = `${gameState.blueShip.power}%`;
 
-    powerWrapper.appendChild(powerDisplay);
+    powerDisplayWrapper.appendChild(powerDisplay);
+
+    powerWrapper.appendChild(powerLabel);
+    powerWrapper.appendChild(powerDisplayWrapper);
 
     let healthWrapper = document.createElement("div");
     healthWrapper.id = "healthWrapper";
+
+    let healthLabel = document.createElement("div");
+    healthLabel.id = "healthLabel";
+    healthLabel.textContent = "Health:";
+
+    let healthDisplayWrapper = document.createElement("div");
+    healthDisplayWrapper.id = "healthDisplayWrapper";
 
     let healthDisplay = document.createElement("div");
     healthDisplay.id = "healthDisplay";
     healthDisplay.style.width = `${gameState.redShip.health}%`;
 
-    healthWrapper.appendChild(healthDisplay);
+    healthDisplayWrapper.appendChild(healthDisplay);
+
+    healthWrapper.appendChild(healthLabel);
+    healthWrapper.appendChild(healthDisplayWrapper);
 
     controlBox.appendChild(damageWrapper);
     controlBox.appendChild(powerWrapper);
@@ -500,12 +589,12 @@ socket.on("startGame", (gameState) => {
   } else if (playerPosition === "redIC" || playerPosition === "blueIC") {
     uiWrapper.innerHTML = `
         <div id="chatWrapper">
-            <div id="messageWrapper"></div>
             <div id="messageInputWrapper">
                 <input type="text" id="messageInput" name="messageInput" placeholder="Enter to Ally, Shift+Enter to Enemy">
                 <div id="messageInputBtnAlly">Ally</div>
                 <div id="messageInputBtnEnemy">Enemy</div>
             </div>
+            <div id="messageWrapper"></div>
         </div>
     `;
   }
@@ -542,9 +631,6 @@ socket.on("startGame", (gameState) => {
 });
 
 socket.on("message", (author, receiver, message) => {
-  console.log(author);
-  console.log(receiver);
-  console.log(message);
   if ((playerPosition === "redOC" && receiver === 0) || (playerPosition === "blueOC" && receiver === 1)) {
     let messageElement = document.createElement("div");
     messageElement.className = "messageElement";
@@ -582,13 +668,45 @@ socket.on("message", (author, receiver, message) => {
 
     let messageContent = document.createElement("div");
     messageContent.className = "messageContent";
-    messageContent.textContent = message;
 
     messageElement.appendChild(messageRevealButton);
     messageElement.appendChild(messageContent);
 
-    document.getElementById("messageBox").appendChild(messageElement);
+    document.getElementById("messageBox").prepend(messageElement);
     document.getElementById("messageBox").scrollTop = document.getElementById("messageBox").scrollHeight;
+
+    printMessageToElement(messageContent, message);
+  } else if (playerPosition === "redIC" || playerPosition === "blueIC") {
+    let messageElement = document.createElement("div");
+    messageElement.className = "messageElement";
+
+    let messageInfo = document.createElement("div");
+    messageInfo.className = "messageInfo";
+    let messageInfoString = "";
+    if (author === getTeam()) {
+      messageInfoString += "You";
+    } else {
+      messageInfoString += "Enemy";
+    }
+    messageInfoString += " to ";
+    if (receiver === getTeam()) {
+      messageInfoString += "Ally";
+    } else {
+      messageInfoString += "Enemy";
+    }
+    messageInfoString += ":";
+    messageInfo.textContent = messageInfoString;
+
+    let messageContent = document.createElement("div");
+    messageContent.className = "messageContent";
+
+    messageElement.appendChild(messageInfo);
+    messageElement.appendChild(messageContent);
+
+    document.getElementById("messageWrapper").prepend(messageElement);
+    document.getElementById("messageWrapper").scrollTop = document.getElementById("messageWrapper").scrollHeight;
+
+    printMessageToElement(messageContent, message);
   }
 });
 
@@ -598,21 +716,61 @@ socket.on("fireDud", (team) => {
     setTimeout(() => {
       document.getElementById("powerDisplay").className = "";
     }, 1000);
+    dud.play();
   } else if (team === 1 && playerPosition === "blueOC") {
     document.getElementById("powerDisplay").className = "blink";
     setTimeout(() => {
       document.getElementById("powerDisplay").className = "";
     }, 1000);
+    dud.play();
   }
 });
 
+socket.on("fireSuccess", (team, damage) => {
+  if (
+    (playerPosition === "redOC" && team === 0) ||
+    (playerPosition === "blueOC" && team === 1) ||
+    playerPosition === "redIC" ||
+    playerPosition === "blueIC"
+  ) {
+    missile.volume = damage / 100;
+    missile.load();
+    missile.play();
+  }
+});
+
+socket.on("hit", (team) => {
+  if (
+    (playerPosition === "redOC" && team === 0) ||
+    (playerPosition === "blueOC" && team === 1) ||
+    playerPosition === "redIC" ||
+    playerPosition === "blueIC"
+  ) {
+    damage.load();
+    damage.play();
+  }
+});
+
+socket.on("miss", () => {
+  if (playerPosition === "redIC" || playerPosition === "blueIC") {
+    miss.load();
+    miss.play();
+  }
+});
+
+const disturbArea = 5;
 socket.on("updateGame", (gameState) => {
   redShip.x = gameState.redShip.x;
   redShip.y = gameState.redShip.y;
   redShip.angle = gameState.redShip.angle;
+  redShip.health = gameState.redShip.health;
   blueShip.x = gameState.blueShip.x;
   blueShip.y = gameState.blueShip.y;
   blueShip.angle = gameState.blueShip.angle;
+  blueShip.health = gameState.blueShip.health;
+
+  disturb(redShip.x + 2 * disturbArea * Math.random() - disturbArea, redShip.y + 2 * disturbArea * Math.random() - disturbArea);
+  disturb(blueShip.x + 2 * disturbArea * Math.random() - disturbArea, blueShip.y + 2 * disturbArea * Math.random() - disturbArea);
 
   missiles = [];
   for (let i = 0; i < gameState.missiles.length; i++) {
@@ -634,10 +792,30 @@ socket.on("updateGame", (gameState) => {
 });
 
 socket.on("gameWin", (winner) => {
+  if (pingLoop != -1) {
+    clearInterval(pingLoop);
+  }
+  if (ambienceLoop != -1) {
+    clearInterval(ambienceLoop);
+  }
   gameWinner = winner;
   winTime = Date.now();
+
+  let blackoutX, blackoutY;
+  if (winner === 0) {
+    blackoutX = blueShip.x * (window.innerHeight / 1000);
+    blackoutY = blueShip.y * (window.innerHeight / 1000);
+  } else if (winner === 1) {
+    blackoutX = redShip.x * (window.innerHeight / 1000);
+    blackoutY = redShip.y * (window.innerHeight / 1000);
+  }
+  blackout(blackoutX, blackoutY);
+
   setTimeout(() => {
     removeAllChildNodes(document.getElementById("gameWrapper"));
+    if (document.getElementById("blackoutCanvas")) {
+      document.getElementById("blackoutCanvas").remove();
+    }
 
     let winnerElement = document.createElement("div");
     winnerElement.id = "winnerElement";
@@ -648,8 +826,96 @@ socket.on("gameWin", (winner) => {
     }
 
     document.getElementById("gameWrapper").appendChild(winnerElement);
-  }, 3000);
+  }, 5000);
 });
+
+let waterWidth = 1000;
+let waterHeight = 1000;
+let waterHalfWidth = waterWidth >> 1;
+let waterHalfHeight = waterHeight >> 1;
+let waterSize = waterWidth * (waterHeight + 2) * 2;
+let oldind = waterWidth;
+let newind = waterWidth * (waterHeight + 3);
+let riprad = 5;
+let ripplemap = [];
+let last_map = [];
+let ripple;
+let waterTexture;
+
+for (var i = 0; i < waterSize; i++) {
+  last_map[i] = ripplemap[i] = 0;
+}
+
+function disturb(dx, dy) {
+  dx <<= 0;
+  dy <<= 0;
+
+  for (let j = dy - riprad; j < dy + riprad; j++) {
+    for (let k = dx - riprad; k < dx + riprad; k++) {
+      ripplemap[oldind + j * waterWidth + k] += 128;
+    }
+  }
+}
+
+function newframe() {
+  let a, b, data, cur_pixel, new_pixel, old_data;
+
+  let t = oldind;
+  oldind = newind;
+  newind = t;
+  let i = 0;
+
+  // create local copies of variables to decrease
+  // scope lookup time in Firefox
+  let _width = waterWidth,
+    _height = waterHeight,
+    _ripplemap = ripplemap,
+    _last_map = last_map,
+    _rd = ripple.data,
+    _td = waterTexture.data,
+    _half_width = waterHalfWidth,
+    _half_height = waterHalfHeight;
+
+  for (let y = 0; y < _height; y++) {
+    for (let x = 0; x < _width; x++) {
+      let _newind = newind + i,
+        _mapind = oldind + i;
+      data = (_ripplemap[_mapind - _width] + _ripplemap[_mapind + _width] + _ripplemap[_mapind - 1] + _ripplemap[_mapind + 1]) >> 1;
+
+      data -= _ripplemap[_newind];
+      data -= data >> 5;
+
+      _ripplemap[_newind] = data;
+
+      //where data=0 then still, where data>0 then wave
+      data = 1024 - data;
+
+      old_data = _last_map[i];
+      _last_map[i] = data;
+
+      if (old_data != data) {
+        //offsets
+        a = ((((x - _half_width) * data) / 1024) << 0) + _half_width;
+        b = ((((y - _half_height) * data) / 1024) << 0) + _half_height;
+
+        //bounds check
+        if (a >= _width) a = _width - 1;
+        if (a < 0) a = 0;
+        if (b >= _height) b = _height - 1;
+        if (b < 0) b = 0;
+
+        new_pixel = (a + b * _width) * 4;
+        cur_pixel = i * 4;
+
+        _rd[cur_pixel] = _td[new_pixel];
+        _rd[cur_pixel + 1] = _td[new_pixel + 1];
+        _rd[cur_pixel + 2] = _td[new_pixel + 2];
+      }
+
+      ++i;
+    }
+  }
+}
 
 function animate() {
   if (gameWinner !== -1) {
@@ -689,31 +955,24 @@ function animate() {
     }
   }
 
-  // ctx.fillStyle = "white";
-  // ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  var img = new Image();
-  img.src = "/media/images/canvas_bg.jpg";
-
-  img.onload = function () {
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  };
-
-  if (playerPosition !== "blueOC") {
-    if (gameWinner !== 1) {
-      redShip.draw();
-    }
+  backgroundFrame = backgroundFrame + frameDirection;
+  if (backgroundFrame >= 749 || backgroundFrame <= 0) {
+    frameDirection *= -1;
   }
-  if (playerPosition !== "redOC") {
-    if (gameWinner !== 0) {
-      blueShip.draw();
-    }
-  }
-  if (gameWinner === 0) {
-    // Draw sinking blue ship
-  } else if (gameWinner === 1) {
-    // Draw sinking red ship
-  }
+
+  ctx.save();
+  ctx.drawImage(backgroundImages[backgroundFrame], 0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  let fogData = ctx.getImageData(0, 0, waterWidth, waterHeight);
+
+  waterTexture = ctx.getImageData(0, 0, waterWidth, waterHeight);
+  ripple = ctx.getImageData(0, 0, waterWidth, waterHeight);
+  newframe();
+  ctx.putImageData(ripple, 0, 0);
+
+  redShip.draw();
+  blueShip.draw();
 
   for (let i = 0; i < missiles.length; i++) {
     if (!(missiles[i].team === 0 && playerPosition === "blueOC") && !(missiles[i].team === 1 && playerPosition === "redOC")) {
@@ -725,5 +984,31 @@ function animate() {
     if (playerPosition === "redIC" || playerPosition === "blueIC") {
       drawFuel(fuels[i].x, fuels[i].y);
     }
+  }
+
+  if (playerPosition === "redOC") {
+    let foggedData = ctx.getImageData(0, 0, waterWidth, waterHeight);
+    for (let i = 0; i < fogData.data.length; i += 4) {
+      let pixelX = (i / 4) % fogData.width;
+      let pixelY = Math.floor(i / 4 / fogData.width);
+      if (Math.sqrt((pixelX - redShip.x) * (pixelX - redShip.x) + (pixelY - redShip.y) * (pixelY - redShip.y)) > 100) {
+        foggedData.data[i] = fogData.data[i] / 2;
+        foggedData.data[i + 1] = fogData.data[i + 1] / 2;
+        foggedData.data[i + 2] = fogData.data[i + 2] / 2;
+      }
+    }
+    ctx.putImageData(foggedData, 0, 0);
+  } else if (playerPosition === "blueOC") {
+    let foggedData = ctx.getImageData(0, 0, waterWidth, waterHeight);
+    for (let i = 0; i < fogData.data.length; i += 4) {
+      let pixelX = (i / 4) % fogData.width;
+      let pixelY = Math.floor(i / 4 / fogData.width);
+      if (Math.sqrt((pixelX - blueShip.x) * (pixelX - blueShip.x) + (pixelY - blueShip.y) * (pixelY - blueShip.y)) > 100) {
+        foggedData.data[i] = fogData.data[i] / 2;
+        foggedData.data[i + 1] = fogData.data[i + 1] / 2;
+        foggedData.data[i + 2] = fogData.data[i + 2] / 2;
+      }
+    }
+    ctx.putImageData(foggedData, 0, 0);
   }
 }

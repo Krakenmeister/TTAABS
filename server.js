@@ -34,6 +34,7 @@ const shipSpeed = 0.5;
 // const shipAcceleration = 0.008;
 const fuelSpawnChance = 0.0003;
 const missileSpeed = 8;
+const powerDamageRatio = 0.75;
 
 const createGame = (req, res, next) => {
   let isUniqueCode = false;
@@ -214,26 +215,24 @@ io.on("connection", (socket) => {
       return;
     }
 
-    let x, y, actualDamage;
     if (team === 0) {
-      if (gameState.redShip.power < 6) {
+      if (gameState.redShip.power < damage) {
         io.to(gameCode).emit("fireDud", team);
         return;
       }
       x = gameState.redShip.x;
       y = gameState.redShip.y;
-      actualDamage = Math.max(Math.floor((parseInt(damage) / 100) * gameState.redShip.power), 1);
-      gameState.redShip.power -= actualDamage;
+      gameState.redShip.power -= damage;
     } else {
-      if (gameState.blueShip.power < 6) {
+      if (gameState.blueShip.power < damage) {
         io.to(gameCode).emit("fireDud", team);
         return;
       }
       x = gameState.blueShip.x;
       y = gameState.blueShip.y;
-      actualDamage = Math.max(Math.floor((parseInt(damage) / 100) * gameState.blueShip.power), 1);
-      gameState.blueShip.power -= actualDamage;
+      gameState.blueShip.power -= damage;
     }
+    io.to(gameCode).emit("fireSuccess", team, damage);
 
     let newMissile = {
       x: x,
@@ -242,7 +241,7 @@ io.on("connection", (socket) => {
       angle: angle,
       maxTimer: range,
       timer: 0,
-      damage: damage,
+      damage: powerDamageRatio * damage,
       speed: missileSpeed,
     };
     gameState.missiles.push(newMissile);
@@ -298,6 +297,7 @@ setInterval(() => {
       if (gameState.missiles[i].timer >= gameState.missiles[i].maxTimer) {
         gameState.missiles.splice(i, 1);
         i--;
+        io.to(gameCode).emit("miss");
       }
     }
 
@@ -363,6 +363,7 @@ setInterval(() => {
         gameState.redShip.health -= gameState.missiles[i].damage;
         gameState.missiles.splice(i, 1);
         i--;
+        io.to(gameCode).emit("hit", 0);
       } else if (
         gameState.missiles[i].team === 0 &&
         Math.sqrt(
@@ -373,6 +374,7 @@ setInterval(() => {
         gameState.blueShip.health -= gameState.missiles[i].damage;
         gameState.missiles.splice(i, 1);
         i--;
+        io.to(gameCode).emit("hit", 1);
       }
     }
     for (let i = 0; i < gameState.fuels.length; i++) {
@@ -384,6 +386,7 @@ setInterval(() => {
       ) {
         gameState.redShip.power = 100;
         gameState.fuels.splice(i, 1);
+        io.to(gameCode).emit("fuel", 0);
       } else if (
         Math.sqrt(
           (gameState.fuels[i].x - gameState.blueShip.x) * (gameState.fuels[i].x - gameState.blueShip.x) +
@@ -392,6 +395,7 @@ setInterval(() => {
       ) {
         gameState.blueShip.power = 100;
         gameState.fuels.splice(i, 1);
+        io.to(gameCode).emit("fuel", 1);
       }
     }
 
