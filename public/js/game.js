@@ -16,7 +16,7 @@ let fuelPromise = loadImage("/media/images/gascan.png");
 let backgroundImages = [];
 let backgroundPromises = [];
 for (let i = 0; i < 750; i++) {
-  backgroundPromises.push(loadImage(`/media/images/waterbackground/${i + 1}.png`));
+  backgroundPromises.push(loadImage(`/media/images/waterbackground/${i + 1}.jpeg`));
 }
 
 Promise.all(backgroundPromises).then((imgs) => {
