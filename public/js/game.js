@@ -109,28 +109,28 @@ socket.on("updateLobby", (players) => {
     switch (i) {
       case 0:
         if (players["redOC"]) {
-          playerListValue.textContent = players["redOC"].name;
+          playerListValue.textContent = "Player Ready";
         } else {
           playerListValue.textContent = "---";
         }
         break;
       case 1:
         if (players["redIC"]) {
-          playerListValue.textContent = players["redIC"].name;
+          playerListValue.textContent = "Player Ready";
         } else {
           playerListValue.textContent = "---";
         }
         break;
       case 2:
         if (players["blueOC"]) {
-          playerListValue.textContent = players["blueOC"].name;
+          playerListValue.textContent = "Player Ready";
         } else {
           playerListValue.textContent = "---";
         }
         break;
       case 3:
         if (players["blueIC"]) {
-          playerListValue.textContent = players["blueIC"].name;
+          playerListValue.textContent = "Player Ready";
         } else {
           playerListValue.textContent = "---";
         }
@@ -609,8 +609,18 @@ socket.on("updateGame", (gameState) => {
 socket.on("gameWin", (winner) => {
   gameWinner = winner;
   winTime = Date.now();
-  setTimeout(function () {
-    alert("game win");
+  setTimeout(() => {
+    removeAllChildNodes(document.getElementById("gameWrapper"));
+
+    let winnerElement = document.createElement("div");
+    winnerElement.id = "winnerElement";
+    if (gameWinner === 0) {
+      winnerElement.textContent = "Red Team Wins!";
+    } else if (gameWinner === 1) {
+      winnerElement.textContent = "Blue Team Wins!";
+    }
+
+    document.getElementById("gameWrapper").appendChild(winnerElement);
   }, 3000);
 });
 
@@ -629,6 +639,7 @@ function animate() {
         let targetAngularVelocity =
           (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) /
           Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
+        targetAngularVelocity = (targetAngularVelocity / Math.abs(targetAngularVelocity)) * Math.sqrt(Math.abs(targetAngularVelocity));
         console.log(targetAngularVelocity);
         socket.emit("updateRed", gameCode, targetAngularVelocity);
       } else if (playerPosition === "blueOC") {
@@ -641,6 +652,7 @@ function animate() {
         let targetAngularVelocity =
           (forwardVector[0] * targetVector[0] + forwardVector[1] * targetVector[1]) /
           Math.sqrt(targetVector[0] * targetVector[0] + targetVector[1] * targetVector[1]);
+        targetAngularVelocity = (targetAngularVelocity / Math.abs(targetAngularVelocity)) * Math.sqrt(Math.abs(targetAngularVelocity));
         console.log(targetAngularVelocity);
         socket.emit("updateBlue", gameCode, targetAngularVelocity);
       }

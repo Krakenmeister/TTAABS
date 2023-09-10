@@ -47,10 +47,6 @@ function goPlay() {
       codeDisplay.innerHTML = `
         <div id="codeTitle">${res.data.gameCode}</div>
         <div class="inputWrapper">
-            <div>Name: </div>
-            <input type="text" id="joinName" name="joinName">
-        </div>
-        <div class="inputWrapper">
             <div>Role: </div>
             <select name="joinPosition" id="joinPosition">
                 <option value="redOC">Red Operations Commander</option>
@@ -73,13 +69,11 @@ function goPlay() {
         } else {
           code = document.getElementById("codeTitle").innerHTML;
         }
-        let name = document.getElementById("joinName").value;
         let position = document.getElementById("joinPosition").value;
         if (verifyName(name)) {
           axios
             .post("/join", {
               joinCode: code,
-              joinName: name,
               joinPosition: position,
             })
             .then((res) => {
@@ -90,11 +84,9 @@ function goPlay() {
               } else if (res.data.access === "duplicate") {
                 alert("That name is already taken");
               } else if (res.data.access === "granted") {
-                axios
-                  .post("/setCookies", { gameCode: code, position: position })
-                  .then((res) => {
-                    window.location.href = "/play";
-                  });
+                axios.post("/setCookies", { gameCode: code, position: position }).then((res) => {
+                  window.location.href = "/play";
+                });
               }
             });
         }
@@ -115,10 +107,6 @@ function goPlay() {
         <div class="inputWrapper">
             <div>Room Code:</div>
             <input type="text" id="joinCode" name="joinCode">
-        </div>
-        <div class="inputWrapper">
-            <div>Name: </div>
-            <input type="text" id="joinName" name="joinName">
         </div>
         <div class="inputWrapper">
             <div>Role: </div>
@@ -143,13 +131,11 @@ function goPlay() {
       } else {
         code = document.getElementById("codeTitle").innerHTML;
       }
-      let name = document.getElementById("joinName").value;
       let position = document.getElementById("joinPosition").value;
       if (verifyName(name)) {
         axios
           .post("/join", {
             joinCode: code,
-            joinName: name,
             joinPosition: position,
           })
           .then((res) => {
@@ -160,11 +146,9 @@ function goPlay() {
             } else if (res.data.access === "duplicate") {
               alert("That name is already taken");
             } else if (res.data.access === "granted") {
-              axios
-                .post("/setCookies", { gameCode: code, position: position })
-                .then((res) => {
-                  window.location.href = "/play";
-                });
+              axios.post("/setCookies", { gameCode: code, position: position }).then((res) => {
+                window.location.href = "/play";
+              });
             }
           });
       }

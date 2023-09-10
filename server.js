@@ -31,7 +31,7 @@ const worldWidth = 1000;
 const worldHeight = 1000;
 const revealCost = 33;
 const shipSpeed = 0.5;
-const shipAcceleration = 0.002;
+const shipAcceleration = 0.008;
 const fuelSpawnChance = 0.0003;
 
 const createGame = (req, res, next) => {
@@ -39,9 +39,9 @@ const createGame = (req, res, next) => {
   let code;
 
   while (!isUniqueCode) {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const characters = "0123456789";
     code = "";
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 4; i++) {
       code += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     if (!games[`${code}`]) {
@@ -81,19 +81,8 @@ const joinGame = (req, res, next) => {
     return next();
   }
 
-  // Check for duplicate name
-  for (const playerType in gameState.players) {
-    if (gameState.players[playerType]) {
-      if (gameState.players[playerType].name === req.body.joinName) {
-        req.access = "duplicate";
-        return next();
-      }
-    }
-  }
-
   // Add the player to the requested position
   gameState.players[`${req.body.joinPosition}`] = {
-    name: req.body.joinName,
     hasJoined: false,
   };
 
@@ -147,6 +136,9 @@ router.post("/canReveal", (req, res) => {
 io.on("connection", (socket) => {
   socket.on("joinGame", (gameCode, position) => {
     let gameState = games[`${gameCode}`];
+    if (!gameState) {
+      return;
+    }
     gameState.players[`${position}`].hasJoined = true;
 
     let allJoined = true;
@@ -199,11 +191,17 @@ io.on("connection", (socket) => {
     if (!gameState) {
       return;
     }
+    if (!gameState.redShip) {
+      return;
+    }
     gameState.redShip.targetAngularVelocity = targetAngularVelocity;
   });
   socket.on("updateBlue", (gameCode, targetAngularVelocity) => {
     let gameState = games[`${gameCode}`];
     if (!gameState) {
+      return;
+    }
+    if (!gameState.blueShip) {
       return;
     }
     gameState.blueShip.targetAngularVelocity = targetAngularVelocity;
@@ -388,10 +386,43 @@ setInterval(() => {
     // Check for win
     if (gameState.redShip.health <= 0) {
       io.to(gameCode).emit("gameWin", 1);
-      delete games[`${gameCode}`];
+      gameState.redShip = null;
+      gameState.blueShip = null;
 
       setTimeout(function () {
-        io.in(gameCode).disconnectSockets(true);
+        io.in(gameCode).emit("rematch");
+        setTimeout(function () {
+          gameState.redShip = {
+            x: Math.random() * worldWidth,
+            y: Math.random() * worldHeight,
+            speed: shipSpeed,
+            angle: Math.random() * 2 * Math.PI,
+            angularVelocity: 0,
+            targetAngularVelocity: 0,
+            angularAcceleration: shipAcceleration,
+            health: 100,
+            power: 100,
+          };
+
+          gameState.blueShip = {
+            x: Math.random() * worldWidth,
+            y: Math.random() * worldHeight,
+            speed: shipSpeed,
+            angle: Math.random() * 2 * Math.PI,
+            angularVelocity: 0,
+            targetAngularVelocity: 0,
+            angularAcceleration: shipAcceleration,
+            health: 100,
+            power: 100,
+          };
+
+          gameState.missiles = [];
+          gameState.fuels = [];
+          gameState.civilians = [];
+
+          console.log(gameState);
+          io.in(gameCode).emit("startGame", gameState);
+        }, 3000);
       }, 3000);
     } else if (gameState.blueShip.health <= 0) {
       io.to(gameCode).emit("gameWin", 1);
