@@ -492,7 +492,7 @@ socket.on("startGame", (gameState) => {
         <div id="chatWrapper">
             <div id="messageWrapper"></div>
             <div id="messageInputWrapper">
-                <input type="text" id="messageInput" name="messageInput">
+                <input type="text" id="messageInput" name="messageInput" placeholder="Enter to Ally, Shift+Enter to Enemy">
                 <div id="messageInputBtnAlly">Ally</div>
                 <div id="messageInputBtnEnemy">Enemy</div>
             </div>
@@ -582,6 +582,20 @@ socket.on("message", (author, receiver, message) => {
   }
 });
 
+socket.on("fireDud", (team) => {
+  if (team === 0 && playerPosition === "redOC") {
+    document.getElementById("powerDisplay").className = "blink";
+    setTimeout(() => {
+      document.getElementById("powerDisplay").className = "";
+    }, 1000);
+  } else if (team === 1 && playerPosition === "blueOC") {
+    document.getElementById("powerDisplay").className = "blink";
+    setTimeout(() => {
+      document.getElementById("powerDisplay").className = "";
+    }, 1000);
+  }
+});
+
 socket.on("updateGame", (gameState) => {
   redShip.x = gameState.redShip.x;
   redShip.y = gameState.redShip.y;
@@ -628,6 +642,9 @@ socket.on("gameWin", (winner) => {
 });
 
 function animate() {
+  if (gameWinner !== -1) {
+    return;
+  }
   requestAnimationFrame(animate);
 
   if (mouseOnCanvas !== -1) {

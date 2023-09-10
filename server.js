@@ -33,6 +33,7 @@ const revealCost = 33;
 const shipSpeed = 0.5;
 // const shipAcceleration = 0.008;
 const fuelSpawnChance = 0.0003;
+const missileSpeed = 8;
 
 const createGame = (req, res, next) => {
   let isUniqueCode = false;
@@ -212,11 +213,19 @@ io.on("connection", (socket) => {
 
     let x, y, actualDamage;
     if (team === 0) {
+      if (gameState.redShip.power < 6) {
+        io.to(gameCode).emit("fireDud", team);
+        return;
+      }
       x = gameState.redShip.x;
       y = gameState.redShip.y;
       actualDamage = Math.max(Math.floor((parseInt(damage) / 100) * gameState.redShip.power), 1);
       gameState.redShip.power -= actualDamage;
     } else {
+      if (gameState.blueShip.power < 6) {
+        io.to(gameCode).emit("fireDud", team);
+        return;
+      }
       x = gameState.blueShip.x;
       y = gameState.blueShip.y;
       actualDamage = Math.max(Math.floor((parseInt(damage) / 100) * gameState.blueShip.power), 1);
@@ -231,7 +240,7 @@ io.on("connection", (socket) => {
       maxTimer: range,
       timer: 0,
       damage: damage,
-      speed: 3,
+      speed: missileSpeed,
     };
     gameState.missiles.push(newMissile);
   });
@@ -399,7 +408,6 @@ setInterval(() => {
             angle: Math.random() * 2 * Math.PI,
             angularVelocity: 0,
             targetAngularVelocity: 0,
-            // angularAcceleration: shipAcceleration,
             health: 100,
             power: 100,
           };
@@ -411,7 +419,6 @@ setInterval(() => {
             angle: Math.random() * 2 * Math.PI,
             angularVelocity: 0,
             targetAngularVelocity: 0,
-            // angularAcceleration: shipAcceleration,
             health: 100,
             power: 100,
           };
@@ -420,16 +427,45 @@ setInterval(() => {
           gameState.fuels = [];
           gameState.civilians = [];
 
-          console.log(gameState);
           io.in(gameCode).emit("startGame", gameState);
         }, 3000);
       }, 3000);
     } else if (gameState.blueShip.health <= 0) {
-      io.to(gameCode).emit("gameWin", 1);
-      delete games[`${gameCode}`];
+      io.to(gameCode).emit("gameWin", 0);
+      gameState.redShip = null;
+      gameState.blueShip = null;
 
       setTimeout(function () {
-        io.in(gameCode).disconnectSockets(true);
+        io.in(gameCode).emit("rematch");
+        setTimeout(function () {
+          gameState.redShip = {
+            x: Math.random() * worldWidth,
+            y: Math.random() * worldHeight,
+            speed: shipSpeed,
+            angle: Math.random() * 2 * Math.PI,
+            angularVelocity: 0,
+            targetAngularVelocity: 0,
+            health: 100,
+            power: 100,
+          };
+
+          gameState.blueShip = {
+            x: Math.random() * worldWidth,
+            y: Math.random() * worldHeight,
+            speed: shipSpeed,
+            angle: Math.random() * 2 * Math.PI,
+            angularVelocity: 0,
+            targetAngularVelocity: 0,
+            health: 100,
+            power: 100,
+          };
+
+          gameState.missiles = [];
+          gameState.fuels = [];
+          gameState.civilians = [];
+
+          io.in(gameCode).emit("startGame", gameState);
+        }, 3000);
       }, 3000);
     } else {
       io.to(gameCode).emit("updateGame", gameState);
